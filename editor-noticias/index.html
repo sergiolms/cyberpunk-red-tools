@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Editor WYSIWYG local para crear y guardar screamsheets de noticias en IndexedDB."
+    />
+    <title>Editor Noticias // DB local</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&family=Roboto+Slab:wght@400;500;700&family=Special+Elite&family=Orbitron:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup" aria-label="Editor Noticias">
+          <span class="brand-mark">EN</span>
+          <span>
+            <strong>EDITOR-NOTICIAS</strong>
+            <small>// DB LOCAL</small>
+          </span>
+        </div>
+        <div class="topbar-actions">
+          <span id="saveStatus" class="save-status" role="status">Cargando DB</span>
+          <button class="command-button" type="button" data-action="new-sheet" title="Nueva hoja">
+            Nueva
+          </button>
+          <button class="command-button" type="button" data-action="open-library" title="Abrir DB local">
+            DB
+          </button>
+          <button class="command-button primary" type="button" data-action="save-now" title="Guardar local">
+            Guardar local
+          </button>
+          <button class="icon-button" type="button" data-action="print" title="Imprimir o guardar PDF">
+            PDF
+          </button>
+          <button class="icon-button" type="button" data-action="export-png" title="Exportar como PNG">
+            PNG
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="tool-rail" aria-label="Herramientas de edición">
+          <section class="tool-section">
+            <h2>Plantillas</h2>
+            <div class="template-grid" role="group" aria-label="Plantillas">
+              <button type="button" data-template="night-city">NC Press</button>
+              <button type="button" data-template="nct-world">NCT</button>
+              <button type="button" data-template="corpo-dossier">Corpo</button>
+              <button type="button" data-template="street-wire">Wire</button>
+              <button type="button" data-template="augmented-optic">Optic</button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Bloques</h2>
+            <div class="tool-grid">
+              <button type="button" data-add-block="headline">H1</button>
+              <button type="button" data-add-block="section">H2</button>
+              <button type="button" data-add-block="paragraph">P</button>
+              <button type="button" data-add-block="image">IMG</button>
+              <button type="button" data-add-block="pullquote">CITA</button>
+              <button type="button" data-add-block="sidebar">BOX</button>
+              <button type="button" data-add-block="brief">BREVE</button>
+              <button type="button" data-add-block="ad">AD</button>
+              <button type="button" data-add-block="divider">LINEA</button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Bloque</h2>
+            <div class="button-row">
+              <button type="button" data-action="move-up" disabled title="Subir bloque">Arriba</button>
+              <button type="button" data-action="move-down" disabled title="Bajar bloque">Abajo</button>
+            </div>
+            <div class="button-row">
+              <button type="button" data-action="duplicate-block" disabled title="Duplicar bloque">
+                Duplicar
+              </button>
+              <button class="danger" type="button" data-action="delete-block" disabled title="Eliminar bloque">
+                Eliminar
+              </button>
+            </div>
+          </section>
+
+          <section class="tool-section" id="imageControls" hidden aria-label="Tamaño de imagen">
+            <h2>Imagen</h2>
+            <div class="segmented-control" role="group" aria-label="Alineación de imagen">
+              <button type="button" data-image-align="left" title="Alinear a la izquierda">Izq</button>
+              <button type="button" data-image-align="center" title="Centrar">Centro</button>
+              <button type="button" data-image-align="right" title="Alinear a la derecha">Der</button>
+            </div>
+            <label class="range-field range-field--first">
+              <span>Ancho <b id="imageWidthLabel">100%</b></span>
+              <input id="imageWidth" type="range" min="20" max="100" step="5" value="100" data-image-width />
+            </label>
+            <label class="range-field">
+              <span>Alto <b id="imageHeightLabel">245px</b></span>
+              <input id="imageHeight" type="range" min="120" max="640" step="10" value="245" data-image-height />
+            </label>
+            <div class="button-row">
+              <button type="button" data-action="reset-image-size" title="Restablecer tamaño">Reset</button>
+              <button type="button" data-action="replace-image" title="Reemplazar imagen">Reemplazar</button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Categorías</h2>
+            <div class="button-row">
+              <button type="button" data-action="add-category" title="Añadir categoría">Añadir</button>
+              <button type="button" data-action="delete-category" title="Borrar categoría activa">
+                Borrar
+              </button>
+            </div>
+            <div class="button-row">
+              <button type="button" data-action="move-category-left" title="Mover categoría activa a la izquierda">
+                Izq
+              </button>
+              <button type="button" data-action="move-category-right" title="Mover categoría activa a la derecha">
+                Der
+              </button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Columnas</h2>
+            <div class="segmented-control" role="group" aria-label="Columnas del cuerpo">
+              <button type="button" data-columns="1">1</button>
+              <button type="button" data-columns="2">2</button>
+              <button type="button" data-columns="3">3</button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Acento</h2>
+            <div class="swatches" role="group" aria-label="Color de acento">
+              <button type="button" data-accent="#d71920" style="--swatch: #d71920" title="Rojo"></button>
+              <button type="button" data-accent="#f5c542" style="--swatch: #f5c542" title="Amarillo"></button>
+              <button type="button" data-accent="#22d3ee" style="--swatch: #22d3ee" title="Cian"></button>
+              <button type="button" data-accent="#ffffff" style="--swatch: #ffffff" title="Blanco"></button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="preview-pane" aria-label="Hoja editable">
+          <div class="preview-header">
+            <span id="documentTitle">Screamsheet local</span>
+            <span id="updatedAt">Sin guardar</span>
+          </div>
+          <div id="sheetViewport" class="sheet-viewport">
+            <div id="sheetStage" class="sheet-stage">
+              <article id="sheet" class="screamsheet" aria-label="Screamsheet editable"></article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <aside id="libraryPanel" class="library-panel" aria-label="DB local" aria-hidden="true">
+      <header>
+        <div>
+          <strong>DB local</strong>
+          <small>IndexedDB</small>
+        </div>
+        <button class="icon-button" type="button" data-action="close-library" title="Cerrar">Cerrar</button>
+      </header>
+      <div id="libraryList" class="library-list"></div>
+    </aside>
+
+    <input id="imageInput" type="file" accept="image/*" hidden />
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
