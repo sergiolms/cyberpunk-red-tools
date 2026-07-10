@@ -414,6 +414,44 @@
         line-height: 1.7;
       }
 
+      .support {
+        margin-bottom: 18px;
+      }
+
+      .coffee-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border: 1px solid var(--primary);
+        background: rgba(245, 197, 66, 0.08);
+        color: var(--primary);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-decoration: none;
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+        transition:
+          background 140ms ease,
+          box-shadow 140ms ease,
+          transform 140ms ease;
+      }
+
+      .coffee-link:hover,
+      .coffee-link:focus-visible {
+        background: rgba(245, 197, 66, 0.16);
+        box-shadow: 0 0 0 1px var(--primary), 0 10px 30px rgba(0, 0, 0, 0.4);
+        transform: translateY(-2px);
+        outline: 0;
+      }
+
+      .coffee-ico {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+
       @media (max-width: 560px) {
         .shell {
           padding: 0 14px 48px;
@@ -452,9 +490,29 @@
       </section>
 
       <div class="section-label">Herramientas disponibles</div>
+
       <main class="grid" id="toolGrid"></main>
 
       <footer>
+        <div class="support">
+          <a class="coffee-link" href="https://buymeacoffee.com/sergiolms" target="_blank" rel="noopener noreferrer">
+            <svg
+              class="coffee-ico"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 8.5h13v5.5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8.5Z" />
+              <path d="M17 9.5h2.3a2.3 2.3 0 0 1 0 4.6H17" />
+              <path d="M7 2.8c-.6.9-.6 1.6 0 2.5M11 2.8c-.6.9-.6 1.6 0 2.5" />
+            </svg>
+            ¿Te gusta la app? Invítame a un café
+          </a>
+        </div>
         Contenido no oficial bajo la Homebrew Content Policy de R. Talsorian Games.<br />
         Marcas y nombres pertenecen a sus respectivos propietarios. // Uso local.
       </footer>
@@ -475,7 +533,6 @@
       ];
 
       const grid = document.getElementById("toolGrid");
-
       const esc = (value) =>
         String(value).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 

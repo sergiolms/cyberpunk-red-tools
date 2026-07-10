@@ -1136,6 +1136,46 @@ body.is-resizing-image {
   }
 }
 
+.app-footer {
+  display: flex;
+  justify-content: center;
+  padding: 20px 18px 26px;
+}
+
+.coffee-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: rgba(245, 197, 66, 0.08);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.coffee-link:hover,
+.coffee-link:focus-visible {
+  background: rgba(245, 197, 66, 0.16);
+  box-shadow: 0 0 0 1px var(--primary), 0 10px 30px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+  outline: 0;
+}
+
+.coffee-ico {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
 /* Sin margen de pagina: elimina la cabecera/pie que el navegador imprime por defecto (fecha y titulo). */
 @page {
   margin: 0;
@@ -1150,6 +1190,7 @@ body.is-resizing-image {
   .tool-rail,
   .preview-header,
   .library-panel,
+  .app-footer,
   .toast,
   .hud-grid-field,
   .hud-radial,
