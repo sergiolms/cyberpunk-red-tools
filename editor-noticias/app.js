@@ -417,7 +417,7 @@ function render() {
   const isNct = templateId === "nct-world";
   const isN54 = templateId === "network-54";
   const usesCustomMasthead = isNct || isN54;
-  document.documentElement.style.setProperty("--sheet-accent", sheet.settings.accent);
+  applyAccent(sheet.settings.accent);
   els.sheet.style.setProperty("--columns", sheet.settings.columns);
   els.sheet.className = `screamsheet template-${templateId}`;
   els.sheet.innerHTML = `
@@ -619,7 +619,7 @@ function handleDocumentClick(event) {
 
   if (accent) {
     sheet.settings.accent = accent;
-    document.documentElement.style.setProperty("--sheet-accent", accent);
+    applyAccent(accent);
     updateChrome();
     queueSave("Acento actualizado");
     return;
@@ -1453,6 +1453,26 @@ function escapeHtml(value) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+// Devuelve el color de texto (#111 o #fff) que mejor contrasta sobre un acento dado.
+function accentInk(color) {
+  const hex = String(color || "").trim().replace("#", "");
+  const full =
+    hex.length === 3
+      ? hex.split("").map((ch) => ch + ch).join("")
+      : hex.padEnd(6, "0").slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16) || 0;
+  const g = parseInt(full.slice(2, 4), 16) || 0;
+  const b = parseInt(full.slice(4, 6), 16) || 0;
+  // Luminancia relativa aproximada (ITU-R BT.601).
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#111" : "#fff";
+}
+
+function applyAccent(color) {
+  document.documentElement.style.setProperty("--sheet-accent", color);
+  document.documentElement.style.setProperty("--sheet-accent-ink", accentInk(color));
 }
 
 function escapeAttr(value) {
