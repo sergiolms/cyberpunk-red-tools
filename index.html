@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Terminal de herramientas para Cyberpunk RED. Indice de utilidades disponibles."
+    />
+    <title>NIGHT CITY // TERMINAL DE HERRAMIENTAS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #090b0f;
+        --panel: #10141a;
+        --panel-2: #151a21;
+        --fg: #e9eef2;
+        --muted: #8a95a3;
+        --border: #303946;
+        --primary: #f5c542;
+        --red: #d71920;
+        --cyan: #22d3ee;
+        --font-ui: "Rajdhani", system-ui, sans-serif;
+        --font-display: "Oswald", "Arial Narrow", sans-serif;
+        --font-mono: "Share Tech Mono", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--font-ui);
+        overflow-x: hidden;
+      }
+
+      /* --- Capas HUD --- */
+      .hud-grid,
+      .hud-radial,
+      .hud-scanlines {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+      }
+
+      .hud-grid {
+        background-image:
+          linear-gradient(rgba(245, 197, 66, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(245, 197, 66, 0.08) 1px, transparent 1px);
+        background-size: 34px 34px;
+        opacity: 0.3;
+      }
+
+      .hud-radial {
+        background:
+          radial-gradient(circle at 15% 8%, rgba(215, 25, 32, 0.18), transparent 34%),
+          radial-gradient(circle at 88% 18%, rgba(34, 211, 238, 0.14), transparent 30%),
+          radial-gradient(circle at 60% 100%, rgba(245, 197, 66, 0.1), transparent 40%);
+      }
+
+      .hud-scanlines {
+        background: repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03) 0,
+          rgba(255, 255, 255, 0.03) 1px,
+          transparent 2px,
+          transparent 5px
+        );
+        mix-blend-mode: overlay;
+      }
+
+      .shell {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px 64px;
+      }
+
+      /* --- Barra superior --- */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: var(--muted);
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--fg);
+      }
+
+      .brand .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 10px var(--primary);
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.25;
+        }
+      }
+
+      .topbar .meta {
+        display: inline-flex;
+        gap: 18px;
+      }
+
+      /* --- Hero --- */
+      .hero {
+        position: relative;
+        margin-top: 44px;
+        padding: 34px 30px 38px;
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(245, 197, 66, 0.06), transparent 42%), rgba(16, 20, 26, 0.7);
+      }
+
+      /* Corchetes de esquina estilo HUD */
+      .bracket::before,
+      .bracket::after {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--primary);
+        pointer-events: none;
+      }
+
+      .bracket::before {
+        top: -1px;
+        left: -1px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+
+      .bracket::after {
+        right: -1px;
+        bottom: -1px;
+        border-left: 0;
+        border-top: 0;
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--cyan);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        margin: 14px 0 0;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(34px, 6vw, 66px);
+        line-height: 0.95;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-shadow: 3px 3px 0 rgba(215, 25, 32, 0.55), -2px -2px 0 rgba(34, 211, 238, 0.35);
+      }
+
+      .hero p {
+        margin: 16px 0 0;
+        max-width: 640px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.5;
+      }
+
+      .hero .accent {
+        color: var(--primary);
+      }
+
+      /* --- Rejilla de herramientas --- */
+      .section-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 48px 0 18px;
+        color: var(--primary);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border), transparent);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 18px;
+      }
+
+      .tool-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 230px;
+        padding: 22px 22px 20px;
+        border: 1px solid var(--border);
+        background: rgba(21, 26, 33, 0.86);
+        color: inherit;
+        text-decoration: none;
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        transition:
+          transform 140ms ease,
+          border-color 140ms ease,
+          background 140ms ease,
+          box-shadow 140ms ease;
+      }
+
+      .tool-card::before {
+        /* barra de acento lateral */
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--card-accent, var(--primary));
+      }
+
+      .tool-card:hover,
+      .tool-card:focus-visible {
+        transform: translateY(-5px);
+        border-color: var(--card-accent, var(--primary));
+        background: rgba(28, 34, 44, 0.94);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-accent, var(--primary));
+        outline: 0;
+      }
+
+      .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .card-code {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--card-accent, var(--primary));
+        letter-spacing: 1px;
+      }
+
+      .card-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .card-status .s-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #35d07f;
+        box-shadow: 0 0 8px #35d07f;
+      }
+
+      .tool-card h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 26px;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .tool-card .sub {
+        margin: 4px 0 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--card-accent, var(--primary));
+      }
+
+      .tool-card .desc {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: auto;
+      }
+
+      .tag {
+        border: 1px solid var(--border);
+        padding: 3px 8px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .launch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--fg);
+      }
+
+      .launch .arrow {
+        transition: transform 140ms ease;
+      }
+
+      .tool-card:hover .launch .arrow,
+      .tool-card:focus-visible .launch .arrow {
+        transform: translateX(5px);
+      }
+
+      /* Ranura vacia (herramienta futura) */
+      .tool-card.slot {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-style: dashed;
+        background: rgba(16, 20, 26, 0.4);
+        color: var(--muted);
+        cursor: default;
+        clip-path: none;
+      }
+
+      .tool-card.slot::before {
+        display: none;
+      }
+
+      .tool-card.slot:hover {
+        transform: none;
+        border-color: var(--border);
+        background: rgba(16, 20, 26, 0.4);
+        box-shadow: none;
+      }
+
+      .tool-card.slot .plus {
+        font-family: var(--font-display);
+        font-size: 40px;
+        color: var(--border);
+        line-height: 1;
+      }
+
+      .tool-card.slot span {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      footer {
+        margin-top: 52px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 560px) {
+        .shell {
+          padding: 0 14px 48px;
+        }
+        .hero {
+          padding: 26px 20px 30px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hud-grid" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="shell">
+      <header class="topbar">
+        <span class="brand"><span class="dot"></span>NIGHT&nbsp;CITY // TERMINAL</span>
+        <span class="meta">
+          <span id="clock">--:--:--</span>
+          <span>NET&nbsp;54</span>
+          <span>V1.0</span>
+        </span>
+      </header>
+
+      <section class="hero bracket">
+        <span class="kicker">// ACCESO CONCEDIDO</span>
+        <h1>Cyberpunk RED<br />Toolkit</h1>
+        <p>
+          Terminal de herramientas para tus partidas en <span class="accent">Night City</span>.
+          Elige un modulo para empezar. Todo corre en local, sin servidores corporativos husmeando.
+        </p>
+      </section>
+
+      <div class="section-label">Herramientas disponibles</div>
+      <main class="grid" id="toolGrid"></main>
+
+      <footer>
+        Contenido no oficial bajo la Homebrew Content Policy de R. Talsorian Games.<br />
+        Marcas y nombres pertenecen a sus respectivos propietarios. // Uso local.
+      </footer>
+    </div>
+
+    <script>
+      // Para añadir una herramienta nueva basta con sumar un objeto a esta lista.
+      const TOOLS = [
+        {
+          code: "01",
+          name: "Editor de Noticias",
+          sub: "Screamsheet Editor",
+          desc: "Editor WYSIWYG de screamsheets de Night City: plantillas, bloques arrastrables, categorias, imagenes redimensionables y exportacion a PNG/PDF. Guardado local en IndexedDB.",
+          href: "editor-noticias/index.html",
+          tags: ["WYSIWYG", "IndexedDB", "PNG · PDF"],
+          accent: "var(--red)",
+        },
+      ];
+
+      const grid = document.getElementById("toolGrid");
+
+      const esc = (value) =>
+        String(value).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+      grid.innerHTML =
+        TOOLS.map(
+          (tool) => `
+            <a class="tool-card" href="${esc(tool.href)}" style="--card-accent:${tool.accent}">
+              <div class="card-top">
+                <span class="card-code">// ${esc(tool.code)}</span>
+                <span class="card-status"><span class="s-dot"></span>Online</span>
+              </div>
+              <div>
+                <h2>${esc(tool.name)}</h2>
+                <p class="sub">${esc(tool.sub)}</p>
+              </div>
+              <p class="desc">${esc(tool.desc)}</p>
+              <div class="tags">${tool.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+              <span class="launch">Acceder <span class="arrow">&rarr;</span></span>
+            </a>`,
+        ).join("") +
+        `<div class="tool-card slot" aria-hidden="true">
+          <span class="plus">+</span>
+          <span>Slot libre // proximamente</span>
+        </div>`;
+
+      const clock = document.getElementById("clock");
+      const tick = () => {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        clock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      };
+      tick();
+      setInterval(tick, 1000);
+    </script>
+  </body>
+</html>
