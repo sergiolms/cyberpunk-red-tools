@@ -443,7 +443,7 @@ function renderStatusbar() {
   `;
 }
 
-// Iconos tipo barra de estado de telefono; heredan el color del texto de la statusbar (currentColor).
+// Phone-style status bar icons; they inherit the statusbar text color (currentColor).
 function renderStatusIcons() {
   return `
     <span class="ss-status-icons" aria-hidden="true">
@@ -795,7 +795,7 @@ function handleEditableKeydown(event) {
     event.preventDefault();
     editable.blur();
   } else if (event.key === "Enter") {
-    // Salto de linea en linea (<br>) en vez de dividir en bloques <div>, que rompen columna/pagina al imprimir.
+    // Inline line break (<br>) instead of splitting into <div> blocks, which break the column/page when printing.
     event.preventDefault();
     document.execCommand("insertLineBreak");
   }
@@ -932,7 +932,7 @@ function handleResizePointerUp() {
   queueSave("Tamaño de imagen ajustado");
 }
 
-// Ajusta el DOM directamente para no re-renderizar y perder el foco del slider durante el arrastre.
+// Update the DOM directly to avoid re-rendering and losing slider focus while dragging.
 function applyImageSize(block) {
   const figure = els.sheet.querySelector(`[data-block-id="${cssEscape(block.id)}"]`);
   if (!figure) return;
@@ -1245,7 +1245,7 @@ async function exportPng() {
     const source = els.sheet;
     const width = source.offsetWidth;
     const height = Math.max(source.scrollHeight, source.offsetHeight);
-    const scale = 2; // exporta a 2x para nitidez
+    const scale = 2; // export at 2x for sharpness
 
     const clone = source.cloneNode(true);
     clone.style.position = "static";
@@ -1287,8 +1287,8 @@ async function exportPng() {
   }
 }
 
-// La SVG se renderiza aislada: no puede acceder a las fuentes del documento ni a recursos remotos,
-// asi que incrustamos la hoja de estilos y las fuentes como data URIs. Se cachea por sesion.
+// The SVG renders in isolation: it cannot access the document fonts or remote resources,
+// so we embed the stylesheet and fonts as data URIs. Cached per session.
 let exportCssCache = null;
 async function buildExportCss() {
   if (exportCssCache) return exportCssCache;
@@ -1455,7 +1455,7 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
-// Devuelve el color de texto (#111 o #fff) que mejor contrasta sobre un acento dado.
+// Returns the text color (#111 or #fff) that best contrasts against a given accent.
 function accentInk(color) {
   const hex = String(color || "").trim().replace("#", "");
   const full =
@@ -1465,7 +1465,7 @@ function accentInk(color) {
   const r = parseInt(full.slice(0, 2), 16) || 0;
   const g = parseInt(full.slice(2, 4), 16) || 0;
   const b = parseInt(full.slice(4, 6), 16) || 0;
-  // Luminancia relativa aproximada (ITU-R BT.601).
+  // Approximate relative luminance (ITU-R BT.601).
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? "#111" : "#fff";
 }
