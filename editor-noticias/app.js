@@ -77,6 +77,57 @@ const TEMPLATE_OPTIONS = [
     }),
   },
   {
+    id: "network-54",
+    label: "N54",
+    build: () => ({
+      title: "Network 54",
+      settings: { columns: 2, accent: "#d71920", template: "network-54" },
+      masthead: {
+        leftCode: "EN DIRECTO",
+        clock: "21:00",
+        edition: "EDICIÓN NACIONAL",
+        outlet: "NETWORK 54",
+        tagline: "Servicio de difusión a nivel nacional",
+        ticker:
+          "EN DIRECTO // sesión extraordinaria del cabildo // alerta meteorológica zona costera // mercados cerrados",
+        categories: ["NACIONAL", "ECONOMÍA", "SEGURIDAD", "CULTURA", "DEPORTES", "INTERNACIONAL"],
+        activeCategory: 0,
+      },
+      blocks: [
+        { type: "headline", text: "MILITECH RECHAZA RESPONSABILIDAD EN LAS EXPLOSIONES DEL PASEO COSTERO" },
+        { type: "byline", author: "C. Vásquez", dateline: "Night City / Sesión Extraordinaria del Cabildo" },
+        {
+          type: "paragraph",
+          text:
+            "La corporación emitió un comunicado formal negando cualquier vínculo con las detonaciones registradas el martes en la zona portuaria. Tres representantes corporativos comparecieron ante el pleno del cabildo en una sesión convocada con carácter urgente, aunque se negaron a responder preguntas fuera del guión preparado.",
+        },
+        {
+          type: "sidebar",
+          heading: "ESTA NOCHE EN N54",
+          text:
+            "21:30 — Cocinando con Pienso. 22:15 — Informe Económico Nocturno. 23:00 — El Foro: debate sobre legislación de implantes. 00:30 — Cine: Acero y Neón (2057).",
+        },
+        {
+          type: "paragraph",
+          text:
+            "Fuentes del departamento de gestión de emergencias confirman que los daños estructurales afectaron a cuatro edificios del sector comercial. Las primeras estimaciones sitúan las pérdidas materiales por encima de los dos millones de eurodólares. No se han reportado víctimas mortales; doce personas recibieron atención médica.",
+        },
+        {
+          type: "pullquote",
+          text: "La corporación lamenta los inconvenientes ocasionados y colabora plenamente con las autoridades.",
+          attribution: "Comunicado oficial de Militech, Oficina de Relaciones Públicas",
+        },
+        {
+          type: "brief",
+          heading: "ACTUALIZACIÓN NACIONAL",
+          text:
+            "El Gobierno Federal anuncia nueva regulación de drones comerciales en zonas urbanas. Entrada en vigor prevista para el primer trimestre del próximo año fiscal.",
+        },
+        { type: "ad", text: "N54: la información que necesitas, cuando la necesitas.", sponsor: "Network 54 — Difusión Nacional" },
+      ],
+    }),
+  },
+  {
     id: "nct-world",
     label: "NCT",
     build: () => ({
@@ -363,14 +414,17 @@ async function loadInitialSheet() {
 
 function render() {
   const templateId = getTemplateId();
+  const isNct = templateId === "nct-world";
+  const isN54 = templateId === "network-54";
+  const usesCustomMasthead = isNct || isN54;
   document.documentElement.style.setProperty("--sheet-accent", sheet.settings.accent);
   els.sheet.style.setProperty("--columns", sheet.settings.columns);
   els.sheet.className = `screamsheet template-${templateId}`;
   els.sheet.innerHTML = `
     ${renderStatusbar()}
-    ${templateId === "nct-world" ? renderNctMasthead() : renderDefaultMasthead()}
-    ${templateId === "nct-world" ? "" : `<nav class="ss-nav" aria-label="Secciones">${renderCategories()}</nav>`}
-    ${templateId === "nct-world" ? "" : renderTicker()}
+    ${isNct ? renderNctMasthead() : isN54 ? renderNet54Masthead() : renderDefaultMasthead()}
+    ${usesCustomMasthead ? "" : `<nav class="ss-nav" aria-label="Secciones">${renderCategories()}</nav>`}
+    ${usesCustomMasthead ? "" : renderTicker()}
     <section class="ss-body" data-sheet-body>${sheet.blocks.map(renderBlock).join("")}</section>
   `;
   updateChrome();
@@ -430,6 +484,27 @@ function renderNctMasthead() {
         <small contenteditable="true" data-singleline="true" data-edit-path="masthead.tagline">${escapeHtml(sheet.masthead.tagline)}</small>
       </div>
       <div class="ss-nct-navstack">
+        <nav class="ss-nav" aria-label="Secciones">${renderCategories()}</nav>
+        ${renderTicker()}
+      </div>
+    </header>
+  `;
+}
+
+function renderNet54Masthead() {
+  return `
+    <header class="ss-masthead ss-masthead-n54">
+      <div class="ss-n54-top">
+        <div class="ss-n54-logo-wrap">
+          <img class="ss-n54-logo-img" src="${typeof N54_LOGO_DATA_URI !== "undefined" ? N54_LOGO_DATA_URI : "./N54-icon.png"}" alt="Logo Network 54" />
+        </div>
+        <div class="ss-n54-brand">
+          <div class="ss-n54-name" contenteditable="true" data-singleline="true" data-edit-path="masthead.outlet">${escapeHtml(sheet.masthead.outlet)}</div>
+          <div class="ss-n54-slogan" contenteditable="true" data-singleline="true" data-edit-path="masthead.tagline">${escapeHtml(sheet.masthead.tagline)}</div>
+          <div class="ss-n54-rule"></div>
+        </div>
+      </div>
+      <div class="ss-n54-navstack">
         <nav class="ss-nav" aria-label="Secciones">${renderCategories()}</nav>
         ${renderTicker()}
       </div>
