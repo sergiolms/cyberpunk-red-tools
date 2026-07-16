@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Rastreador de combate para Cyberpunk RED: gestiona HP, blindaje, munición y aplica daño con las reglas oficiales."
+    />
+    <title>Combat Tracker // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a href="../index.html" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">CT</span>
+          <span class="brand-text">
+            <strong>COMBAT-TRACKER</strong>
+            <small>// CyberPunk: RED</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <span class="counter" id="threatCounter" aria-live="polite">0 amenazas</span>
+          <button class="command-button" type="button" data-action="toggle-add" title="Añadir enemigo">
+            + Enemigo
+          </button>
+          <button class="command-button" type="button" data-action="export" title="Exportar estado JSON">
+            Exportar
+          </button>
+          <button class="command-button" type="button" data-action="import" title="Importar estado JSON">
+            Importar
+          </button>
+          <button class="command-button danger" type="button" data-action="clear-all" title="Vaciar tracker">
+            Limpiar
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= ADD ENEMY DRAWER ============= -->
+        <aside class="add-drawer" id="addDrawer" aria-label="Añadir enemigo">
+          <div class="drawer-head">
+            <h2>Nuevo enemigo</h2>
+            <button class="icon-button" type="button" data-action="close-add" aria-label="Cerrar">×</button>
+          </div>
+
+          <section class="drawer-section">
+            <label class="field-label" for="templateSelect">Plantilla</label>
+            <div class="template-row">
+              <select id="templateSelect" class="input"></select>
+              <button
+                class="icon-button danger"
+                type="button"
+                id="deleteTemplateBtn"
+                title="Eliminar plantilla personalizada"
+                aria-label="Eliminar plantilla"
+              >
+                🗑
+              </button>
+            </div>
+            <p class="hint" id="templateHint"></p>
+          </section>
+
+          <section class="drawer-section">
+            <label class="field-label" for="enemyName">Nombre / Designación</label>
+            <input id="enemyName" class="input" type="text" placeholder="ej. Matón Maelstrom A" />
+
+            <div class="grid-2">
+              <div>
+                <label class="field-label" for="enemyMaxHp">HP máx.</label>
+                <input id="enemyMaxHp" class="input" type="number" min="1" step="1" value="30" />
+              </div>
+              <div>
+                <label class="field-label" for="enemyMag">Cargador</label>
+                <input id="enemyMag" class="input" type="number" min="0" step="1" value="8" />
+              </div>
+              <div>
+                <label class="field-label" for="enemyBody">SP Cuerpo</label>
+                <input id="enemyBody" class="input" type="number" min="0" step="1" value="11" />
+              </div>
+              <div>
+                <label class="field-label" for="enemyHead">SP Cabeza</label>
+                <input id="enemyHead" class="input" type="number" min="0" step="1" value="11" />
+              </div>
+              <div>
+                <label class="field-label" for="enemyCount">Cantidad</label>
+                <input id="enemyCount" class="input" type="number" min="1" max="20" step="1" value="1" />
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button class="command-button primary" type="button" data-action="add-enemy">
+                Añadir al tracker
+              </button>
+              <button class="command-button" type="button" data-action="save-template" title="Guardar como plantilla">
+                Guardar plantilla
+              </button>
+            </div>
+          </section>
+        </aside>
+
+        <!-- ============= MAIN CONTENT ============= -->
+        <section class="main-content">
+          <!-- Damage calculator -->
+          <div class="calculator" id="calculator" hidden>
+            <h2 class="section-title">
+              <span class="section-mono">// 01</span>
+              Calculadora de daño
+            </h2>
+            <div class="calc-grid">
+              <div class="calc-field">
+                <label class="field-label" for="calcDamage">Daño total</label>
+                <div class="stepper">
+                  <button type="button" class="step-btn" data-step="calcDamage" data-delta="-1">−</button>
+                  <input id="calcDamage" class="input" type="number" min="0" step="1" value="0" />
+                  <button type="button" class="step-btn" data-step="calcDamage" data-delta="1">+</button>
+                </div>
+                <div class="chip-row">
+                  <button type="button" class="chip" data-set-damage="5">5</button>
+                  <button type="button" class="chip" data-set-damage="10">10</button>
+                  <button type="button" class="chip" data-set-damage="15">15</button>
+                  <button type="button" class="chip" data-set-damage="20">20</button>
+                </div>
+              </div>
+
+              <div class="calc-field">
+                <label class="field-label" for="calcLocation">Zona de impacto</label>
+                <select id="calcLocation" class="input">
+                  <option value="body">Cuerpo</option>
+                  <option value="head">Cabeza (×2)</option>
+                </select>
+              </div>
+
+              <div class="calc-field">
+                <label class="field-label" for="calcType">Tipo de daño</label>
+                <select id="calcType" class="input">
+                  <option value="ranged">A distancia</option>
+                  <option value="melee">Cuerpo a cuerpo</option>
+                </select>
+              </div>
+
+              <div class="calc-field targets">
+                <label class="field-label">Objetivos</label>
+                <div class="target-chips" id="targetChips" role="group" aria-label="Seleccionar objetivos">
+                  <span class="hint">Sin enemigos.</span>
+                </div>
+              </div>
+
+              <div class="calc-field apply-field">
+                <button class="command-button danger big" type="button" data-action="apply-damage">
+                  Aplicar daño
+                </button>
+              </div>
+            </div>
+            <p class="hint" id="calcHint">
+              Regla RED: el daño debe superar la SP para penetrar. Cuerpo a cuerpo (no bruto) debe superar la mitad de la
+              SP. Cada golpe que penetra ablaciona 1 SP.
+            </p>
+          </div>
+
+          <!-- Enemy list -->
+          <div class="threat-header">
+            <h2 class="section-title">
+              <span class="section-mono">// 02</span>
+              Amenazas activas
+            </h2>
+          </div>
+
+          <div class="threat-list" id="threatList">
+            <div class="empty-state" id="emptyState">
+              <p class="empty-title">No hay enemigos en el tracker.</p>
+              <p class="empty-desc">
+                Usa <strong>+ Enemigo</strong> para añadir la primera amenaza o carga una plantilla del manual.
+              </p>
+              <button class="command-button primary" type="button" data-action="toggle-add">Añadir enemigo</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ============= FLOATING ACTION (mobile) ============= -->
+    <button
+      class="fab"
+      type="button"
+      data-action="toggle-add"
+      aria-label="Añadir enemigo"
+      title="Añadir enemigo"
+    >
+      +
+    </button>
+
+    <!-- ============= TOAST ============= -->
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- ============= HIDDEN FILE INPUT ============= -->
+    <input id="importInput" type="file" accept="application/json" hidden />
+
+    <script src="./templates.js"></script>
+    <script src="./critical-injuries.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
