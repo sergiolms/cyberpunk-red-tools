@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generador de personajes para Cyberpunk RED: rol, estadísticas, habilidades, equipo, ciberware y camino vital con las reglas del manual básico."
+    />
+    <title>Generador de personajes // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <!-- ============= TOPBAR ============= -->
+      <header class="topbar">
+        <a href="../" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">CG</span>
+          <span class="brand-text">
+            <strong>GENERADOR PJ</strong>
+            <small>// CyberPunk: RED</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <button class="command-button" type="button" data-action="randomize" title="Autocompletar personaje al azar">
+            ⚄ Aleatorio
+          </button>
+          <button class="command-button" type="button" data-action="export" title="Exportar personaje (JSON)">
+            Exportar
+          </button>
+          <button class="command-button" type="button" data-action="import" title="Importar personaje (JSON)">
+            Importar
+          </button>
+          <button class="command-button" type="button" data-action="print" title="Imprimir / Guardar como PDF">
+            Imprimir / PDF
+          </button>
+          <button class="command-button danger" type="button" data-action="reset" title="Empezar de cero">
+            Nuevo
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= MÉTODO ============= -->
+        <section class="card" id="cardMethod">
+          <h2 class="section-title"><span class="section-mono">// 00</span> Método de creación</h2>
+          <p class="hint">
+            Elige cómo quieres crear el personaje. Puedes cambiar de método en cualquier momento; todo lo generado es
+            editable.
+          </p>
+          <div class="method-grid" id="methodGrid">
+            <button class="method-chip" type="button" data-method="streetrat">
+              <strong>Rata Callejera</strong>
+              <span>Plantillas por rol. Tiras 1d10 para stats y copias las habilidades. Rápido. 500&thinsp;ed.</span>
+            </button>
+            <button class="method-chip" type="button" data-method="edgerunner">
+              <strong>Edgerunner</strong>
+              <span>Rápido y sucio. Stats por rol (1d10 por columna) y repartes 86 puntos de habilidad. 500&thinsp;ed.</span>
+            </button>
+            <button class="method-chip" type="button" data-method="complete">
+              <strong>Paquete Completo</strong>
+              <span>Calculado. 62 puntos de característica y 86 de habilidad libres. 2550&thinsp;ed.</span>
+            </button>
+          </div>
+        </section>
+
+        <div class="columns">
+          <!-- ============= COLUMNA IZQUIERDA ============= -->
+          <div class="col col-left">
+            <!-- Identidad -->
+            <section class="card" id="cardIdentity">
+              <h2 class="section-title"><span class="section-mono">// 01</span> Identidad</h2>
+              <div class="grid-2">
+                <div class="field">
+                  <label class="field-label" for="charName">Nombre</label>
+                  <input id="charName" class="input" type="text" placeholder="ej. Victoria «Redeye»" />
+                </div>
+                <div class="field">
+                  <label class="field-label" for="charAlias">Alias / Handle</label>
+                  <input id="charAlias" class="input" type="text" placeholder="ej. Redeye" />
+                </div>
+                <div class="field">
+                  <label class="field-label" for="roleSelect">Rol</label>
+                  <select id="roleSelect" class="input"></select>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="roleAbility">Aptitud de rol</label>
+                  <input id="roleAbility" class="input" type="text" readonly />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="roleAbilityRank">Nivel de aptitud de rol</label>
+                <input id="roleAbilityRank" class="input input-narrow" type="number" min="1" max="10" value="4" />
+                <p class="hint" id="roleAbilityDesc"></p>
+              </div>
+            </section>
+
+            <!-- Estadísticas -->
+            <section class="card" id="cardStats">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 02</span> Estadísticas</h2>
+                <div class="head-tools">
+                  <span class="budget" id="statBudget" hidden>62 pts</span>
+                  <button class="command-button small" type="button" data-action="roll-stats" title="Tirar estadísticas">
+                    ⚄ Tirar
+                  </button>
+                </div>
+              </div>
+              <div class="stat-grid" id="statGrid"></div>
+              <div class="stat-hum" id="statHum">
+                <div class="stat-hum-main">
+                  <span class="stat-hum-label">Humanidad</span>
+                  <span class="stat-hum-value"><b id="statHumCur">—</b><span class="stat-hum-sep">de</span><b id="statHumMax">—</b></span>
+                </div>
+                <span class="stat-hum-note" id="statHumNote"></span>
+              </div>
+            </section>
+
+            <!-- Derivadas -->
+            <section class="card" id="cardDerived">
+              <h2 class="section-title"><span class="section-mono">// 03</span> Estadísticas derivadas</h2>
+              <div class="derived-grid derived-grid-3" id="derivedGrid">
+                <div class="derived-box">
+                  <span class="derived-label">Puntos de daño</span>
+                  <span class="derived-value" id="dHp">—</span>
+                </div>
+                <div class="derived-box">
+                  <span class="derived-label">Gravemente herido</span>
+                  <span class="derived-value" id="dSw">—</span>
+                </div>
+                <div class="derived-box">
+                  <span class="derived-label">Salvación contra muerte</span>
+                  <span class="derived-value" id="dDeath">—</span>
+                </div>
+              </div>
+              <p class="hint">
+                PD = 10 + 5 × redondeo((TCO+VOL)/2) · Gravemente herido = mitad de los PD · Salvación = TCO
+              </p>
+            </section>
+
+            <!-- Camino vital -->
+            <section class="card" id="cardLifepath">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 07</span> Camino vital</h2>
+                <button class="command-button small" type="button" data-action="roll-lifepath" title="Tirar camino vital">
+                  ⚄ Tirar todo
+                </button>
+              </div>
+              <p class="hint">Sugerencias editables. Cambia cualquier campo libremente.</p>
+              <div class="lifepath-grid" id="lifepathGrid"></div>
+              <div class="field">
+                <label class="field-label" for="lifepathNotes">Notas de trasfondo</label>
+                <textarea id="lifepathNotes" class="input textarea" rows="4" placeholder="Amigos, enemigos, historia…"></textarea>
+              </div>
+            </section>
+          </div>
+
+          <!-- ============= COLUMNA DERECHA ============= -->
+          <div class="col col-right">
+            <!-- Habilidades -->
+            <section class="card" id="cardSkills">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 04</span> Habilidades</h2>
+                <div class="head-tools">
+                  <span class="budget" id="skillBudget" hidden>86 pts</span>
+                  <button class="command-button small" type="button" data-action="apply-package" title="Aplicar plantilla del rol">
+                    Plantilla rol
+                  </button>
+                  <button class="command-button small" type="button" data-action="add-skill" title="Añadir habilidad">
+                    + Habilidad
+                  </button>
+                </div>
+              </div>
+              <p class="hint" id="skillHint"></p>
+              <div class="skill-list" id="skillList"></div>
+            </section>
+
+            <!-- Armas y blindaje -->
+            <section class="card" id="cardCombat">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 05</span> Armas y blindaje</h2>
+                <div class="head-tools">
+                  <button class="command-button small" type="button" data-action="starter-gear" title="Equipo inicial del rol">
+                    Equipo del rol
+                  </button>
+                  <button class="command-button small" type="button" data-action="add-weapon">+ Arma</button>
+                  <button class="command-button small" type="button" data-action="add-armor">+ Blindaje</button>
+                </div>
+              </div>
+              <div class="tag-list" id="weaponList"></div>
+              <div class="tag-list" id="armorList"></div>
+            </section>
+
+            <!-- Equipo -->
+            <section class="card" id="cardGear">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 06</span> Equipo</h2>
+                <button class="command-button small" type="button" data-action="add-gear">+ Equipo</button>
+              </div>
+              <div class="tag-list" id="gearList"></div>
+            </section>
+
+            <!-- Ciberware -->
+            <section class="card" id="cardCyber">
+              <div class="card-head">
+                <h2 class="section-title"><span class="section-mono">// 08</span> Ciberware</h2>
+                <div class="head-tools">
+                  <label class="check" title="Por defecto la PH es fija (creación). Marca para tirar el d6.">
+                    <input type="checkbox" id="cyberRollToggle" /> PH con d6
+                  </label>
+                  <button class="command-button small" type="button" data-action="reroll-ph" id="rerollPhBtn" hidden>
+                    ⚄ Tirar PH
+                  </button>
+                  <button class="command-button small" type="button" data-action="add-cyber">+ Ciberware</button>
+                </div>
+              </div>
+              <p class="hint">
+                Cada ciberware resta <strong>2 a la Humanidad máxima</strong> y su <strong>PH</strong> a la actual.
+                Por defecto la PH es la <strong>fija</strong> (creación); marca «PH con d6» para usar la tirada.
+              </p>
+              <div class="cyber-summary" id="cyberSummary"></div>
+              <div class="tag-list" id="cyberList"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <footer class="app-footer">
+        <span>Contenido no oficial · Homebrew Content Policy de R. Talsorian Games. Guardado local en tu navegador.</span>
+      </footer>
+    </div>
+
+    <!-- ============= MODAL PICKER ============= -->
+    <div class="modal-backdrop" id="modalBackdrop" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <h3 id="modalTitle">Añadir</h3>
+          <button class="icon-button" type="button" data-action="close-modal" aria-label="Cerrar">×</button>
+        </div>
+        <input id="modalSearch" class="input" type="text" placeholder="Buscar…" autocomplete="off" />
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-foot">
+          <button class="command-button" type="button" data-action="close-modal">Cerrar</button>
+          <button class="command-button primary" type="button" data-action="add-custom">Añadir texto libre</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============= HOJA IMPRIMIBLE ============= -->
+    <div id="printSheet" class="print-sheet" aria-hidden="true"></div>
+
+    <input type="file" id="importFile" accept="application/json,.json" hidden />
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

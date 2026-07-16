@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ChoomDate: implementación en formato Tinder del Digital Dating in the Dark Future de R. Talsorian Games para Cyberpunk RED."
+    />
+    <title>ChoomDate // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a href="../" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">CD</span>
+          <span class="brand-text">
+            <strong>CHOOMDATE</strong>
+            <small>// The Garden Dating · Ziggurat</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <span class="counter" id="sessionCounter" aria-live="polite">0 citas</span>
+          <button class="command-button" type="button" data-action="reshuffle" title="Regenerar baraja">
+            Rebarajar
+          </button>
+          <button class="command-button" type="button" data-action="toggle-matches" title="Ver tu agenda de citas">
+            Agenda
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= DECK ============= -->
+        <section class="deck-area" id="deckArea">
+          <div class="deck-frame">
+            <div class="deck-stack" id="deckStack" aria-live="polite"></div>
+
+            <div class="deck-empty" id="deckEmpty" hidden>
+              <div class="empty-glyph">// SIN PERFILES</div>
+              <p class="empty-copy">Se acabó la lista de esta sesión.<br />¿Rebarajar y probar de nuevo?</p>
+              <button class="command-button primary" type="button" data-action="reshuffle">
+                Generar nueva baraja
+              </button>
+            </div>
+          </div>
+
+          <div class="deck-controls">
+            <button class="deck-btn deck-btn-nope" type="button" data-action="nope" aria-label="Descartar (izquierda)">
+              <span aria-hidden="true">✕</span>
+            </button>
+            <button class="deck-btn deck-btn-info" type="button" data-action="help" aria-label="¿Cómo funciona?">
+              <span aria-hidden="true">?</span>
+            </button>
+            <button class="deck-btn deck-btn-like" type="button" data-action="like" aria-label="Match (derecha)">
+              <span aria-hidden="true">♥</span>
+            </button>
+          </div>
+
+          <p class="hint-keys">
+            <span class="kbd">←</span> descartar &nbsp;·&nbsp;
+            <span class="kbd">→</span> match &nbsp;·&nbsp;
+            <strong>♥</strong> resuelve el Datepath entero
+          </p>
+        </section>
+      </main>
+
+      <footer class="page-attribution">
+        Adaptación del DLC oficial gratuito
+        <a href="https://rtalsoriangames.com/wp-content/uploads/2022/02/RTG-CPR-DLC-DigitalDating.pdf"
+          target="_blank" rel="noopener noreferrer">
+          «Digital Dating in the Dark Future»</a>
+        de R. Talsorian Games (2022) — Neil Branquinho · James Hutt · J Gray.
+        Uso local bajo la Homebrew Content Policy.
+      </footer>
+    </div>
+
+    <!-- ============= MATCH / DATE REPORT MODAL ============= -->
+    <div class="modal-overlay" id="matchOverlay" hidden aria-hidden="true">
+      <div class="modal report-modal" role="dialog" aria-labelledby="reportTitle" aria-modal="true" id="reportModal" data-tone="good">
+        <div class="match-flare" aria-hidden="true"></div>
+        <header class="report-topbar">
+          <div>
+            <span class="match-kicker" id="reportKicker">// CONEXIÓN ESTABLECIDA</span>
+            <h2 id="reportTitle">¡Es un MATCH!</h2>
+          </div>
+          <button class="icon-button" type="button" data-action="close-match" aria-label="Cerrar">×</button>
+        </header>
+        <div class="report-body" id="matchBody"></div>
+        <footer class="report-actions" id="reportActions">
+          <button class="command-button icon-only reroll-btn" type="button" data-action="reroll-match"
+            aria-label="Volver a tirar el Datepath" title="Volver a tirar">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <!-- Flecha circular (refresh) -->
+              <path d="M4 6.5a8 8 0 0 1 13.4-2.2" />
+              <polyline points="18 2 18 5 15 5" />
+              <!-- Dado -->
+              <rect x="8.5" y="8.5" width="10.5" height="10.5" rx="1.6" />
+              <circle cx="11.5" cy="11.5" r="0.95" fill="currentColor" stroke="none" />
+              <circle cx="13.75" cy="13.75" r="0.95" fill="currentColor" stroke="none" />
+              <circle cx="16" cy="16" r="0.95" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+          <div class="report-actions-primary">
+            <button class="command-button" type="button" data-action="close-match" id="dismissMatchBtn" title="Salir sin guardar">
+              ✕ Descartar
+            </button>
+            <button class="command-button primary" type="button" data-action="save-match" id="saveMatchBtn">
+              Guardar en agenda
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ============= INFO / AYUDA MODAL ============= -->
+    <div class="modal-overlay" id="infoOverlay" hidden aria-hidden="true">
+      <div class="modal info-modal" role="dialog" aria-labelledby="infoTitle" aria-modal="true">
+        <header class="details-head">
+          <div>
+            <span class="details-kicker">// INSTRUCCIONES</span>
+            <h2 id="infoTitle">¿Cómo funciona ChoomDate?</h2>
+          </div>
+          <button class="icon-button" type="button" data-action="close-info" aria-label="Cerrar">×</button>
+        </header>
+        <div class="info-body">
+          <p>
+            Esta herramienta implementa el generador oficial de citas
+            <strong>«Digital Dating in the Dark Future»</strong>, un DLC gratuito de R. Talsorian
+            Games para <em>Cyberpunk RED</em>, en formato Tinder.
+          </p>
+          <ol class="info-steps">
+            <li><strong>Cada carta</strong> es un match nuevo. Solo conoces su nombre y dos <em>keywords</em>
+              (Datepath pág. 3 · tabla 1d100).</li>
+            <li><strong>Deslizas ← / ✕</strong> para descartar. Cero drama.</li>
+            <li><strong>Deslizas → / ♥</strong> para aceptar. La app tira automáticamente todo el Datepath:
+              <em>Where is Your Date?</em> (1d10), <em>What is Your Date?</em> (1d6), <em>How Does Your Date Go?</em>
+              (1d10 → buena/rara/ghosted) y todos los beats <em>Beginning · Middle · End</em>, más el
+              <em>Post-Date Review</em>.</li>
+            <li>Cuando un beat referencia una tabla del manual básico (Amigos, Enemigos, Trágica vida amorosa,
+              Familia, Motivaciones, Objetivos vitales, Posesión más valiada), la app la resuelve al vuelo
+              y muestra la fuente para que puedas confirmarla en tu manual.</li>
+            <li>El botón <strong>«Guardar en agenda»</strong> conserva el informe completo en tu navegador
+              (localStorage) para volver a él después.</li>
+          </ol>
+          <p class="info-note">
+            Traducción libre al castellano. Nombres propios (barrios, corporaciones, locales) se mantienen
+            en su forma canónica del setting.
+          </p>
+          <p class="info-attribution">
+            <a href="https://rtalsoriangames.com/wp-content/uploads/2022/02/RTG-CPR-DLC-DigitalDating.pdf"
+              target="_blank" rel="noopener noreferrer">
+              📄 Abrir el PDF original en R. Talsorian Games
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============= MATCHES DRAWER ============= -->
+    <div class="matches-overlay" id="matchesOverlay" hidden aria-hidden="true">
+      <aside class="matches-drawer" role="dialog" aria-labelledby="matchesTitle" aria-modal="true">
+        <header class="matches-head">
+          <div>
+            <span class="details-kicker">// AGENDA</span>
+            <h2 id="matchesTitle">Tus citas</h2>
+          </div>
+          <button class="icon-button" type="button" data-action="close-matches" aria-label="Cerrar">×</button>
+        </header>
+        <div class="matches-body" id="matchesBody">
+          <p class="matches-empty">Todavía no has guardado ninguna cita.</p>
+        </div>
+        <footer class="matches-foot">
+          <button class="command-button" type="button" data-action="clear-matches">
+            Borrar agenda
+          </button>
+        </footer>
+      </aside>
+    </div>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

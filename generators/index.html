@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generador para Cyberpunk RED: encargos por rol, mercados nocturnos, encuentros callejeros y vidas pasadas. Todo aleatorio, todo local."
+    />
+    <title>Generador // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a href="../" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">GEN</span>
+          <span class="brand-text">
+            <strong>GENERADOR</strong>
+            <small>// Night City Random Tables</small>
+          </span>
+        </a>
+        <nav class="tabs" role="tablist" aria-label="Tipo de generador">
+          <button class="tab is-active" type="button" role="tab" data-tab="encargos" aria-selected="true">
+            <span class="tab-glyph" aria-hidden="true">💼</span> Trapicheos
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="mercado" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🏪</span> Mercado nocturno
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="encuentros" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🎲</span> Encuentros
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="vidapasada" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🧬</span> Vida pasada
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="ciberware" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🦾</span> Ciberware
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="vida" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🏠</span> Estilo de vida
+          </button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= ENCARGOS ============= -->
+        <section class="panel is-active" id="panel-encargos" role="tabpanel" aria-label="Generador de trapicheos">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// TRAPICHEOS · ENTRE SESIONES</span>
+              <h1 class="panel-title">Trapicheos por rol</h1>
+              <p class="panel-lead">
+                Con 7 días libres, tu rol se gana unos eddies. Tira 1d6 en la tabla de tu rol; los edis dependen del nivel de tu Aptitud de rol. Añade un gancho de misión si quieres convertirlo en una escena.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field">
+              <span class="field-label">Rol</span>
+              <select id="encargoRol" class="select"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Nivel de Aptitud de rol</span>
+              <select id="encargoNivel" class="select">
+                <option value="0">1 a 4</option>
+                <option value="1">5 a 7</option>
+                <option value="2">8 a 10</option>
+              </select>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="encargoGancho" />
+              <span>Añadir gancho de misión</span>
+            </label>
+            <button class="btn-primary" type="button" data-action="gen-encargo">Generar trapicheo</button>
+          </div>
+          <div class="result-area" id="encargoResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= MERCADO ============= -->
+        <section class="panel" id="panel-mercado" role="tabpanel" aria-label="Generador de mercado nocturno" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// LA NUEVA ECONOMÍA DE LA CALLE</span>
+              <h1 class="panel-title">Mercado nocturno</h1>
+              <p class="panel-lead">
+                Improvisa un mercado nocturno: 2 categorías de mercancía (1d6) y su stock disponible (1d10 tiradas por categoría).
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn-primary" type="button" data-action="gen-mercado">Generar mercado</button>
+          </div>
+          <div class="result-area" id="mercadoResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= ENCUENTROS ============= -->
+        <section class="panel" id="panel-encuentros" role="tabpanel" aria-label="Generador de encuentros" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// ENCUENTROS EN EL ROJO</span>
+              <h1 class="panel-title">Encuentros callejeros</h1>
+              <p class="panel-lead">
+                Tirada percentil (2d10) en las calles de Night City. Elige la zona (su índice de amenaza sesga la tirada) y el nº de jugadores para calcular los PNJ y enviarlos al Combat Tracker.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field">
+              <span class="field-label">Momento del día</span>
+              <select id="encuentroMomento" class="select">
+                <option value="diurnos">Diurnos</option>
+                <option value="anochecer">Al anochecer</option>
+                <option value="medianoche">De medianoche</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Zona (opcional)</span>
+              <select id="encuentroZona" class="select"></select>
+            </label>
+            <label class="field field-narrow">
+              <span class="field-label">Nº de jugadores</span>
+              <input id="encuentroJugadores" class="select" type="number" min="1" max="12" value="4" />
+            </label>
+            <button class="btn-primary" type="button" data-action="gen-encuentro">Tirar encuentro</button>
+          </div>
+          <div class="result-area" id="encuentroResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= VIDA PASADA ============= -->
+        <section class="panel" id="panel-vidapasada" role="tabpanel" aria-label="Generador de vida pasada" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// RELATOS DE LA CALLE</span>
+              <h1 class="panel-title">Vida pasada</h1>
+              <p class="panel-lead">
+                Un trasfondo completo: origen, personalidad, estilo, familia, amigos, enemigos y objetivos. Añade tablas de rol si quieres.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field">
+              <span class="field-label">Rol (opcional)</span>
+              <select id="vidaRol" class="select">
+                <option value="">Sin rol</option>
+              </select>
+            </label>
+            <button class="btn-primary" type="button" data-action="gen-vida">Generar trasfondo</button>
+          </div>
+          <div class="result-area" id="vidaResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= CIBERWARE / HUMANIDAD ============= -->
+        <section class="panel" id="panel-ciberware" role="tabpanel" aria-label="Calculadora de humanidad y ciberware" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// EL ALMA Y LA NUEVA MÁQUINA</span>
+              <h1 class="panel-title">Humanidad &amp; Ciberware</h1>
+              <p class="panel-lead">
+                Instala ciberware y controla tu Humanidad (HUM = EMP × 10). Cada punto de Empatía se pierde al bajar la decena de HUM; con EMP baja, riesgo de ciberpsicosis.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field field-narrow">
+              <span class="field-label">Empatía base (EMP)</span>
+              <input id="cwEmp" class="select" type="number" min="1" max="10" value="8" />
+            </label>
+            <label class="field">
+              <span class="field-label">Añadir ciberware</span>
+              <input id="cwSearch" class="select" type="text" placeholder="Buscar pieza..." list="cwList" />
+              <datalist id="cwList"></datalist>
+            </label>
+            <button class="btn-primary" type="button" data-action="cw-add">Instalar</button>
+            <label class="check">
+              <input type="checkbox" id="cwRoll" />
+              <span>Tirar PH (dados)</span>
+            </label>
+          </div>
+          <div id="cwPreview"></div>
+          <div class="result-area" id="ciberwareResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= ESTILO DE VIDA ============= -->
+        <section class="panel" id="panel-vida" role="tabpanel" aria-label="Calculadora de estilo de vida y alojamiento" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// LA NUEVA ECONOMÍA DE LA CALLE</span>
+              <h1 class="panel-title">Estilo de vida</h1>
+              <p class="panel-lead">
+                Calcula tu gasto mensual de comida y alojamiento, y compáralo con lo que ganas trapicheando cada semana.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field">
+              <span class="field-label">Comida</span>
+              <select id="vidaComida" class="select"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Alojamiento</span>
+              <select id="vidaAloja" class="select"></select>
+            </label>
+            <label class="field field-narrow">
+              <span class="field-label">Trapicheo semanal (ed)</span>
+              <input id="vidaIngreso" class="select" type="number" min="0" step="50" value="0" />
+            </label>
+            <button class="btn-primary" type="button" data-action="vida-calc">Calcular</button>
+          </div>
+          <div class="result-area" id="vidaEconResult" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        Contenido no oficial bajo la Homebrew Content Policy de R. Talsorian Games.
+        El «gancho de misión» es contenido original; el resto proviene del manual básico. // Uso local.
+      </footer>
+    </div>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

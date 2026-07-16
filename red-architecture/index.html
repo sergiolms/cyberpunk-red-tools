@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generador de arquitecturas de RED para Cyberpunk RED: pisos, contraseñas, nodos de control, hielo negro y demonios, además de combates de netrunning listos para dirigir."
+    />
+    <title>RED Architecture // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a href="../index.html" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">RED</span>
+          <span class="brand-text">
+            <strong>RED ARCHITECTURE</strong>
+            <small>// Netrunning &amp; Hielo Negro</small>
+          </span>
+        </a>
+        <nav class="tabs" role="tablist" aria-label="Secciones de netrunning">
+          <button class="tab is-active" type="button" role="tab" data-tab="arquitectura" aria-selected="true">
+            <span class="tab-glyph" aria-hidden="true">🗼</span> Arquitectura
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="combate" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">⚔️</span> Combate
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="ice" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🧊</span> Hielo negro
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="demonios" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">👹</span> Demonios &amp; defensas
+          </button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= ARQUITECTURA ============= -->
+        <section class="panel is-active" id="panel-arquitectura" role="tabpanel" aria-label="Generador de arquitectura de RED">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// CÓMO CONSTRUIR UNA ARQUITECTURA DE RED</span>
+              <h1 class="panel-title">Arquitectura de RED</h1>
+              <p class="panel-lead">
+                Genera una arquitectura piso a piso: contraseñas, archivos, nodos de control, hielo negro y demonios. Piensa el netrun como un ascensor: cada piso abre una «puerta».
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field field-narrow">
+              <span class="field-label">Nº de pisos (3-18)</span>
+              <input id="raPisos" class="select" type="number" min="3" max="18" value="6" />
+            </label>
+            <label class="field">
+              <span class="field-label">Intensidad</span>
+              <select id="raIntensidad" class="select">
+                <option value="baja">Baja (poco hielo negro)</option>
+                <option value="media" selected>Media</option>
+                <option value="alta">Alta (fortaleza corpo)</option>
+              </select>
+            </label>
+            <button class="btn-primary" type="button" data-action="gen-arq">Generar arquitectura</button>
+          </div>
+          <div class="result-area" id="arqResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= COMBATE ============= -->
+        <section class="panel" id="panel-combate" role="tabpanel" aria-label="Combate de netrunning" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// EL COMBATE EN LA RED</span>
+              <h1 class="panel-title">Combate de netrunning</h1>
+              <p class="panel-lead">
+                Genera la oposición de un netrun: hielo negro al acecho (con sus stats listas) y, si procede, un Demonio manejando nodos de control.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field field-narrow">
+              <span class="field-label">Piezas de hielo negro</span>
+              <input id="raNumIce" class="select" type="number" min="1" max="8" value="3" />
+            </label>
+            <label class="check">
+              <input type="checkbox" id="raConDemonio" />
+              <span>Incluir Demonio</span>
+            </label>
+            <button class="btn-primary" type="button" data-action="gen-combate">Generar combate</button>
+          </div>
+          <div class="result-area" id="combateResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= HIELO NEGRO ============= -->
+        <section class="panel" id="panel-ice" role="tabpanel" aria-label="Hielo negro" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// PROGRAMAS LETALES</span>
+              <h1 class="panel-title">Hielo negro</h1>
+              <p class="panel-lead">
+                Consulta las fichas del hielo negro: PER (Deslizamiento), VEL, ATQ, DEF, REZ y su efecto al impactar.
+              </p>
+            </div>
+          </div>
+          <div class="result-area" id="iceResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= DEMONIOS & DEFENSAS ============= -->
+        <section class="panel" id="panel-demonios" role="tabpanel" aria-label="Demonios y defensas" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// DEMONIOS Y DEFENSAS</span>
+              <h1 class="panel-title">Demonios &amp; defensas</h1>
+              <p class="panel-lead">
+                Los Demonios manejan nodos de control para atacar en el espacio de la carne. Aquí tienes sus fichas y las defensas que pueden controlar.
+              </p>
+            </div>
+          </div>
+          <div class="result-area" id="demoResult" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        Contenido no oficial bajo la Homebrew Content Policy de R. Talsorian Games. Datos del manual básico. // Uso local.
+      </footer>
+    </div>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

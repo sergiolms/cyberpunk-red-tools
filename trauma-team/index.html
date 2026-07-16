@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Trauma Team para Cyberpunk RED: tira y consulta heridas críticas, drogas, terapias, estabilización, ingresos de hospital y el equipo de Trauma Team."
+    />
+    <title>Trauma Team // CyberPunk: RED</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="hud-grid-field" aria-hidden="true"></div>
+    <div class="hud-radial" aria-hidden="true"></div>
+    <div class="hud-scanlines" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a href="../" class="brand-lockup" aria-label="Volver al terminal">
+          <span class="brand-mark">TT</span>
+          <span class="brand-text">
+            <strong>TRAUMA TEAM</strong>
+            <small>// Emergencias &amp; Medicina</small>
+          </span>
+        </a>
+        <nav class="tabs" role="tablist" aria-label="Secciones de Trauma Team">
+          <button class="tab is-active" type="button" role="tab" data-tab="heridas" aria-selected="true">
+            <span class="tab-glyph" aria-hidden="true">🩸</span> Heridas
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="drogas" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">💊</span> Drogas
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="terapia" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🧠</span> Terapia
+          </button>
+          <button class="tab" type="button" role="tab" data-tab="servicio" aria-selected="false">
+            <span class="tab-glyph" aria-hidden="true">🚑</span> Servicio &amp; curación
+          </button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <!-- ============= HERIDAS CRÍTICAS ============= -->
+        <section class="panel is-active" id="panel-heridas" role="tabpanel" aria-label="Heridas críticas">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// CUANDO EL BLINDAJE NO ES SUFICIENTE</span>
+              <h1 class="panel-title">Heridas críticas</h1>
+              <p class="panel-lead">
+                Cuando 2+ dados de daño sacan un 6, tira 2d6 en la tabla correspondiente. Toda herida crítica inflige además 5 PD directos.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <label class="field">
+              <span class="field-label">Localización</span>
+              <select id="heridaLoc" class="select">
+                <option value="cuerpo">Cuerpo</option>
+                <option value="cabeza">Cabeza</option>
+              </select>
+            </label>
+            <button class="btn-primary" type="button" data-action="roll-herida">Tirar 2d6</button>
+            <label class="check">
+              <input type="checkbox" id="heridaTabla" />
+              <span>Ver tabla completa</span>
+            </label>
+          </div>
+          <div class="result-area" id="heridaResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= DROGAS ============= -->
+        <section class="panel" id="panel-drogas" role="tabpanel" aria-label="Drogas de la calle" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// DROGAS DE LA CALLE</span>
+              <h1 class="panel-title">Drogas</h1>
+              <p class="panel-lead">
+                Al tomar una dosis se aplica el efecto primario. Al terminar, tira VOL + Resistir torturas/drogas + 1d10 contra el VD del efecto secundario (permanente y adictivo).
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn-ghost" type="button" data-action="roll-droga">Resaltar una al azar</button>
+          </div>
+          <div class="result-area" id="drogaResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= TERAPIA ============= -->
+        <section class="panel" id="panel-terapia" role="tabpanel" aria-label="Terapias" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// LA TERAPIA Y TÚ</span>
+              <h1 class="panel-title">Terapia</h1>
+              <p class="panel-lead">
+                Cada terapia dura 1 semana. Al final, el tecnomédico tira Tecnología médica contra el VD; si falla, se pierden la semana y los materiales.
+              </p>
+            </div>
+          </div>
+          <div class="result-area" id="terapiaResult" aria-live="polite"></div>
+        </section>
+
+        <!-- ============= SERVICIO Y CURACIÓN ============= -->
+        <section class="panel" id="panel-servicio" role="tabpanel" aria-label="Servicio y curación" hidden>
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">// ¿PLATA O EJECUTIVO?</span>
+              <h1 class="panel-title">Servicio &amp; curación</h1>
+              <p class="panel-lead">
+                Llama al Trauma Team, consulta estados de herida, estabilización, ingresos de hospital y el equipo que baja del AV-4.
+              </p>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn-primary" type="button" data-action="llamar-tt">Llamar al Trauma Team (1d6)</button>
+          </div>
+          <div class="result-area" id="servicioResult" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        Contenido no oficial bajo la Homebrew Content Policy de R. Talsorian Games. Datos del manual básico. // Uso local.
+      </footer>
+    </div>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -60,7 +60,7 @@
   const loadState = () => {
     try {
       const raw = localStorage.getItem(STORAGE_ENEMIES);
-      if (raw) state.enemies = JSON.parse(raw) || [];
+      if (raw) state.enemies = (JSON.parse(raw) || []).map(normalizeEnemy);
     } catch (_) {
       state.enemies = [];
     }
@@ -70,6 +70,32 @@
     } catch (_) {
       state.customTemplates = {};
     }
+  };
+
+  /** Fills in any missing fields so older/partial saved enemies stay valid. */
+  const normalizeEnemy = (e) => {
+    const maxHp = parseIntSafe(e && e.maxHp, 30);
+    const bodySp = parseIntSafe(e && e.bodySp, 0);
+    const headSp = parseIntSafe(e && e.headSp, 0);
+    const magazine = parseIntSafe(e && e.magazine, 0);
+    return {
+      id: (e && e.id) || genId(),
+      name: String((e && e.name) || "Enemigo"),
+      maxHp,
+      currentHp: parseIntSafe(e && e.currentHp, maxHp),
+      bodySp,
+      bodySpMax: parseIntSafe(e && e.bodySpMax, bodySp),
+      headSp,
+      headSpMax: parseIntSafe(e && e.headSpMax, headSp),
+      magazine,
+      magazineMax: parseIntSafe(e && e.magazineMax, magazine),
+      notes: String((e && e.notes) || ""),
+      criticalInjuries:
+        e && Array.isArray(e.criticalInjuries)
+          ? e.criticalInjuries.filter((c) => c && (c.location === "body" || c.location === "head"))
+          : [],
+      templateKey: (e && e.templateKey) || null,
+    };
   };
 
   const persistEnemies = debounce(() => {
@@ -171,6 +197,20 @@
     if (status === "dead") return "🕸 Neutralizado";
     if (status === "wounded") return "⚠ Herido (−2 acciones)";
     return "🟢 Operativo";
+  };
+
+  const STAT_MAX_KEY = { magazine: "magazineMax", bodySp: "bodySpMax", headSp: "headSpMax" };
+
+  /**
+   * Sets an editable stat (SP or magazine) clamped to >= 0. If the new value
+   * exceeds the recorded maximum (reload target / ablation baseline), the max is
+   * raised to match — so increasing the magazine also increases reload capacity.
+   */
+  const applyStatEdit = (enemy, field, value) => {
+    const v = Math.max(0, parseIntSafe(value, 0));
+    enemy[field] = v;
+    const maxKey = STAT_MAX_KEY[field];
+    if (maxKey && v > parseIntSafe(enemy[maxKey], 0)) enemy[maxKey] = v;
   };
 
   const roll2d6 = () => 1 + Math.floor(Math.random() * 6) + (1 + Math.floor(Math.random() * 6));
@@ -417,7 +457,9 @@
     const halfHp = Math.floor(enemy.maxHp / 2);
     const halfPct = enemy.maxHp > 0 ? (halfHp / enemy.maxHp) * 100 : 50;
     const targeted = state.selectedTargets.has(enemy.id);
-    const outOfAmmo = enemy.magazineMax > 0 && enemy.magazine <= 0;
+    const dead = enemy.currentHp <= 0;
+    const noFirearm = enemy.magazineMax === 0;
+    const magFull = enemy.magazine >= enemy.magazineMax;
 
     return `
       <article class="enemy-card${targeted ? " targeted" : ""}" data-status="${status}" data-enemy-id="${esc(
@@ -463,17 +505,17 @@
 
         <div class="weapon-row">
           <button type="button" class="weapon-btn reload" data-action="reload"
-            ${enemy.magazineMax === 0 ? "disabled" : ""}>
+            ${noFirearm || magFull || dead ? "disabled" : ""}>
             Recargar
             <small>${enemy.magazine}/${enemy.magazineMax}</small>
           </button>
           <button type="button" class="weapon-btn" data-action="shoot"
-            ${outOfAmmo || enemy.currentHp <= 0 ? "disabled" : ""}>
+            ${noFirearm || enemy.magazine <= 0 || dead ? "disabled" : ""}>
             Disparar
             <small>−1 bala</small>
           </button>
           <button type="button" class="weapon-btn" data-action="autofire"
-            ${enemy.magazine < 10 || enemy.currentHp <= 0 ? "disabled" : ""}>
+            ${noFirearm || enemy.magazine < 10 || dead ? "disabled" : ""}>
             Ráfaga
             <small>−10 balas</small>
           </button>
@@ -589,7 +631,6 @@
       sel.value = sel.value || (groups[0] && groups[0].entries[0] && groups[0].entries[0].key) || "";
       state.selectedTemplateKey = sel.value;
     }
-    applyTemplateToForm(state.selectedTemplateKey);
     updateDeleteTemplateButton();
   };
 
@@ -679,23 +720,7 @@
         const data = JSON.parse(String(reader.result));
         if (!data || typeof data !== "object") throw new Error("Formato inválido");
         if (Array.isArray(data.enemies)) {
-          state.enemies = data.enemies.map((e) => ({
-            id: e.id || genId(),
-            name: String(e.name || "Enemigo"),
-            maxHp: parseIntSafe(e.maxHp, 30),
-            currentHp: parseIntSafe(e.currentHp, e.maxHp || 30),
-            bodySp: parseIntSafe(e.bodySp, 0),
-            bodySpMax: parseIntSafe(e.bodySpMax ?? e.bodySp, 0),
-            headSp: parseIntSafe(e.headSp, 0),
-            headSpMax: parseIntSafe(e.headSpMax ?? e.headSp, 0),
-            magazine: parseIntSafe(e.magazine, 0),
-            magazineMax: parseIntSafe(e.magazineMax ?? e.magazine, 0),
-            notes: String(e.notes || ""),
-            criticalInjuries: Array.isArray(e.criticalInjuries)
-              ? e.criticalInjuries.filter((c) => c && (c.location === "body" || c.location === "head"))
-              : [],
-            templateKey: e.templateKey || null,
-          }));
+          state.enemies = data.enemies.map(normalizeEnemy);
         }
         if (data.customTemplates && typeof data.customTemplates === "object") {
           state.customTemplates = data.customTemplates;
@@ -825,8 +850,9 @@
             removeEnemy(id);
             return;
           case "reload":
+            if (enemy.magazineMax === 0) return;
             enemy.magazine = enemy.magazineMax;
-            toast(`${enemy.name}: cargador al máximo.`, "success");
+            toast(`${enemy.name}: recargado (${enemy.magazineMax} balas).`, "success");
             persistEnemies();
             render();
             return;
@@ -871,7 +897,7 @@
       if (statBtn) {
         const field = statBtn.dataset.field;
         const delta = parseIntSafe(statBtn.dataset.statDelta, 0);
-        enemy[field] = Math.max(0, parseIntSafe(enemy[field], 0) + delta);
+        applyStatEdit(enemy, field, parseIntSafe(enemy[field], 0) + delta);
         persistEnemies();
         render();
         return;
@@ -940,7 +966,7 @@
         persistEnemies();
         render();
       } else if (field === "bodySp" || field === "headSp" || field === "magazine") {
-        enemy[field] = Math.max(0, parseIntSafe(ev.target.value, 0));
+        applyStatEdit(enemy, field, parseIntSafe(ev.target.value, 0));
         persistEnemies();
         render();
       }
@@ -1000,11 +1026,50 @@
   };
 
   // -------- Init --------
+  /**
+   * Imports a pre-generated encounter passed via the URL (?add=<json>).
+   * The payload is an array of { k: templateKey, n: count, name?: label }.
+   * Enemies are appended to the current tracker and the URL is cleaned up
+   * so a page refresh does not add them again.
+   */
+  const importFromUrl = () => {
+    let raw;
+    try {
+      raw = new URLSearchParams(window.location.search).get("add");
+    } catch (_) {
+      return;
+    }
+    if (!raw) return;
+    let specs = null;
+    try {
+      specs = JSON.parse(decodeURIComponent(raw));
+    } catch (_) {
+      specs = null;
+    }
+    if (Array.isArray(specs)) {
+      specs.forEach((s) => {
+        const tpl = s && findTemplateByKey(s.k);
+        if (!tpl) return;
+        const qty = clamp(parseIntSafe(s.n, 1), 1, 99);
+        addEnemyFromTemplate(tpl, s.name ? { name: String(s.name) } : {}, qty);
+      });
+    }
+    // Strip the query string so refreshes don't re-import.
+    try {
+      window.history.replaceState({}, "", window.location.pathname);
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
   const init = () => {
     loadState();
     wireGlobalActions();
     wireEnemyCardActions();
+    importFromUrl();
     render();
+    // Pre-fill the add-enemy form with the initial template (once).
+    applyTemplateToForm(state.selectedTemplateKey);
   };
 
   if (document.readyState === "loading") {
