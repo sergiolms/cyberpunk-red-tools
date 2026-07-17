@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="../shared/ui.css" />
   </head>
   <body>
     <div class="hud-grid-field" aria-hidden="true"></div>
@@ -32,21 +33,20 @@
           </span>
         </a>
         <div class="topbar-actions">
-          <button class="command-button" type="button" data-action="randomize" title="Autocompletar personaje al azar">
-            ⚄ Aleatorio
-          </button>
-          <button class="command-button" type="button" data-action="export" title="Exportar personaje (JSON)">
-            Exportar
-          </button>
-          <button class="command-button" type="button" data-action="import" title="Importar personaje (JSON)">
-            Importar
-          </button>
-          <button class="command-button" type="button" data-action="print" title="Imprimir / Guardar como PDF">
-            Imprimir / PDF
-          </button>
-          <button class="command-button danger" type="button" data-action="reset" title="Empezar de cero">
-            Nuevo
-          </button>
+          <div class="split-button">
+            <button class="command-button primary split-main" type="button" data-action="randomize" title="Autocompletar personaje al azar">
+              ⚄ Aleatorio
+            </button>
+            <button class="command-button primary split-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
+              <span aria-hidden="true">▾</span>
+            </button>
+            <div class="split-menu" role="menu" hidden>
+              <button class="split-item" type="button" role="menuitem" data-action="export">Exportar (JSON)</button>
+              <button class="split-item" type="button" role="menuitem" data-action="import">Importar (JSON)</button>
+              <button class="split-item" type="button" role="menuitem" data-action="print">Imprimir / PDF</button>
+              <button class="split-item danger" type="button" role="menuitem" data-action="reset">Nuevo</button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -263,5 +263,6 @@
 
     <script src="./data.js"></script>
     <script src="./app.js"></script>
+    <script src="../shared/ui.js"></script>
   </body>
 </html>

@@ -1211,7 +1211,7 @@ select.input {
     place-items: center;
   }
 
-  .topbar-actions .command-button[data-action="toggle-add"] {
+  .topbar-actions .split-main[data-action="toggle-add"] {
     display: none;
   }
 }

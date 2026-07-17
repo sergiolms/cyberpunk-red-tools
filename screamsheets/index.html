@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="../shared/ui.css" />
   </head>
   <body>
     <div class="hud-grid-field" aria-hidden="true"></div>
@@ -32,21 +33,20 @@
         </div>
         <div class="topbar-actions">
           <span id="saveStatus" class="save-status" role="status">Cargando DB</span>
-          <button class="command-button" type="button" data-action="new-sheet" title="Nueva hoja">
-            Nueva
-          </button>
-          <button class="command-button" type="button" data-action="open-library" title="Abrir DB local">
-            DB
-          </button>
-          <button class="command-button primary" type="button" data-action="save-now" title="Guardar local">
-            Guardar local
-          </button>
-          <button class="icon-button" type="button" data-action="print" title="Imprimir o guardar PDF">
-            PDF
-          </button>
-          <button class="icon-button" type="button" data-action="export-png" title="Exportar como PNG">
-            PNG
-          </button>
+          <div class="split-button">
+            <button class="command-button primary split-main" type="button" data-action="save-now" title="Guardar local">
+              Guardar local
+            </button>
+            <button class="command-button primary split-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
+              <span aria-hidden="true">▾</span>
+            </button>
+            <div class="split-menu" role="menu" hidden>
+              <button class="split-item" type="button" role="menuitem" data-action="new-sheet">Nueva hoja</button>
+              <button class="split-item" type="button" role="menuitem" data-action="open-library">Abrir DB local</button>
+              <button class="split-item" type="button" role="menuitem" data-action="print">Imprimir / PDF</button>
+              <button class="split-item" type="button" role="menuitem" data-action="export-png">Exportar PNG</button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -203,5 +203,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./n54-logo.js" defer></script>
     <script src="./app.js" defer></script>
+    <script src="../shared/ui.js" defer></script>
   </body>
 </html>

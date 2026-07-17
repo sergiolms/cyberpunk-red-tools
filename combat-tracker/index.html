@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="../shared/ui.css" />
   </head>
   <body>
     <div class="hud-grid-field" aria-hidden="true"></div>
@@ -32,18 +33,19 @@
         </a>
         <div class="topbar-actions">
           <span class="counter" id="threatCounter" aria-live="polite">0 amenazas</span>
-          <button class="command-button" type="button" data-action="toggle-add" title="Añadir enemigo">
-            + Enemigo
-          </button>
-          <button class="command-button" type="button" data-action="export" title="Exportar estado JSON">
-            Exportar
-          </button>
-          <button class="command-button" type="button" data-action="import" title="Importar estado JSON">
-            Importar
-          </button>
-          <button class="command-button danger" type="button" data-action="clear-all" title="Vaciar tracker">
-            Limpiar
-          </button>
+          <div class="split-button">
+            <button class="command-button primary split-main" type="button" data-action="toggle-add" title="Añadir enemigo">
+              + Enemigo
+            </button>
+            <button class="command-button primary split-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
+              <span aria-hidden="true">▾</span>
+            </button>
+            <div class="split-menu" role="menu" hidden>
+              <button class="split-item" type="button" role="menuitem" data-action="export">Exportar (JSON)</button>
+              <button class="split-item" type="button" role="menuitem" data-action="import">Importar (JSON)</button>
+              <button class="split-item danger" type="button" role="menuitem" data-action="clear-all">Limpiar</button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -210,5 +212,6 @@
     <script src="./templates.js"></script>
     <script src="./critical-injuries.js"></script>
     <script src="./app.js"></script>
+    <script src="../shared/ui.js"></script>
   </body>
 </html>

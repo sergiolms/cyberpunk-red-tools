@@ -162,6 +162,17 @@ textarea {
   flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .topbar-actions {
+    justify-content: flex-start;
+  }
+}
+
 /* ============= BUTTONS ============= */
 .command-button,
 .icon-button {
