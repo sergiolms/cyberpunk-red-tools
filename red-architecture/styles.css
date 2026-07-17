@@ -194,6 +194,7 @@ select {
 
 /* ============= WORKSPACE / PANELS ============= */
 .workspace {
+  min-width: 0;
   padding: 26px 20px 40px;
 }
 
