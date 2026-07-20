@@ -41,6 +41,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Con un modal abierto, solo debe hacer scroll el propio modal. */
+body.no-scroll {
+  overflow: hidden;
+}
+
 button {
   font: inherit;
   color: inherit;
@@ -94,8 +99,10 @@ textarea {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ============= TOPBAR ============= */
@@ -229,23 +236,36 @@ textarea {
 /* ============= WORKSPACE ============= */
 .workspace {
   position: relative;
-  display: grid;
-  place-items: start center;
-  padding: 26px 18px 52px;
-}
-
-.deck-area {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  justify-content: center;
+  padding: 18px 18px;
+  overflow: hidden;
+}
+
+.deck-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   width: min(100%, 420px);
 }
 
 .deck-frame {
   position: relative;
-  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   aspect-ratio: 3 / 4.5;
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
   perspective: 1200px;
 }
 
@@ -370,26 +390,6 @@ textarea {
   mix-blend-mode: screen;
 }
 
-.card-avatar .role-badge {
-  position: absolute;
-  top: 40%;
-  right: -20px;
-  transform: rotate(90deg);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.card-avatar .role-glyph {
-  position: absolute;
-  bottom: 44%;
-  right: 22px;
-  font-size: 32px;
-  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6));
-}
-
 .card-body {
   position: absolute;
   left: 22px;
@@ -409,6 +409,22 @@ textarea {
   text-transform: uppercase;
   line-height: 1;
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.card-gender {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -2px;
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .card-tagline {
@@ -781,12 +797,14 @@ textarea {
 }
 
 .report-match-initial {
+  position: relative;
   width: 64px;
   height: 64px;
   flex: none;
   border: 2px solid var(--pink);
   display: grid;
   place-items: center;
+  overflow: hidden;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 30px;
@@ -1383,7 +1401,7 @@ button.match-row:hover .row-chevron {
 /* ============= RESPONSIVE ============= */
 @media (max-width: 560px) {
   .workspace {
-    padding: 18px 12px 40px;
+    padding: 12px 12px;
   }
   .deck-controls {
     gap: 16px;

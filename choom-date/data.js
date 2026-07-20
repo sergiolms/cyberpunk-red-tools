@@ -50,6 +50,45 @@ const KEYWORDS = [
   "Espontánea", "Deportes", "Rol de mesa", "Técnico", "Virtuosa",
 ];
 
+// ---- Género (se muestra en la carta del perfil) ----
+const GENDERS = [
+  { label: "Femenino", glyph: "♀" },
+  { label: "Masculino", glyph: "♂" },
+  { label: "No binario", glyph: "⚧" },
+];
+
+// ---- Formas de género para keywords/roles (f = femenino, m = masculino,
+// e = no binario · forma inclusiva -e). Solo las palabras con marca de
+// género aparecen aquí; el resto se muestran tal cual (epicenas/neutras). ----
+const WORD_FORMS = {
+  // Rasgos
+  "Aventurera":  { m: "Aventurero",  f: "Aventurera",  e: "Aventurere" },
+  "Cariñosa":    { m: "Cariñoso",    f: "Cariñosa",    e: "Cariñose" },
+  "Ambiciosa":   { m: "Ambicioso",   f: "Ambiciosa",   e: "Ambiciose" },
+  "Considerada": { m: "Considerado", f: "Considerada", e: "Considerade" },
+  "Encantadora": { m: "Encantador",  f: "Encantadora", e: "Encantadore" },
+  "Valerosa":    { m: "Valeroso",    f: "Valerosa",    e: "Valerose" },
+  "Creativa":    { m: "Creativo",    f: "Creativa",    e: "Creative" },
+  "Divertida":   { m: "Divertido",   f: "Divertida",   e: "Divertide" },
+  "Trabajadora": { m: "Trabajador",  f: "Trabajadora", e: "Trabajadore" },
+  "Esperanzada": { m: "Esperanzado", f: "Esperanzada", e: "Esperanzade" },
+  "Amorosa":     { m: "Amoroso",     f: "Amorosa",     e: "Amorose" },
+  "Modesta":     { m: "Modesto",     f: "Modesta",     e: "Modeste" },
+  "Apasionada":  { m: "Apasionado",  f: "Apasionada",  e: "Apasionade" },
+  "Silenciosa":  { m: "Silencioso",  f: "Silenciosa",  e: "Silenciose" },
+  "Respetuosa":  { m: "Respetuoso",  f: "Respetuosa",  e: "Respetuose" },
+  "Espontánea":  { m: "Espontáneo",  f: "Espontánea",  e: "Espontánee" },
+  "Virtuosa":    { m: "Virtuoso",    f: "Virtuosa",    e: "Virtuose" },
+  // Roles con marca de género (los epicenos —Policía, Periodista, Netrunner,
+  // Nómada— no cambian y no necesitan entrada).
+  "Ejecutivo":   { m: "Ejecutivo",   f: "Ejecutiva",   e: "Ejecutive" },
+  "Arreglador":  { m: "Arreglador",  f: "Arregladora", e: "Arregladore" },
+  "Tecnomédico": { m: "Tecnomédico", f: "Tecnomédica", e: "Tecnomédique" },
+  "Rockero":     { m: "Rockero",     f: "Rockera",     e: "Rockere" },
+  "Mercenario":  { m: "Mercenario",  f: "Mercenaria",  e: "Mercenarie" },
+  "Técnico":     { m: "Técnico",     f: "Técnica",     e: "Técnique" },
+};
+
 // ---- LOCATIONS (Datepath pág. 4) ----
 // 20 distritos con su "prompt" y las 6 actividades correspondientes.
 const LOCATIONS = [
@@ -332,7 +371,7 @@ const GOOD_BEGINNING = [
   { text: "Te cuenta a qué se dedica como edgerunner.", ref: "roleLifepath" },
   { text: "Descubres al momento algo que tenéis en común." },
   { text: "Tiene un rasgo positivo (a tu elección) que no aparecía en el perfil." },
-  { text: "Es muy atractiva. Posiblemente bodyculpteada." },
+  { text: "Tiene un atractivo de infarto. Posiblemente con bodysculpt." },
 ];
 
 const GOOD_MIDDLE = [
@@ -341,14 +380,14 @@ const GOOD_MIDDLE = [
   { text: "Te habla de una relación anterior.", ref: "previousRelationship" },
   { text: "Descubres cosas sobre su familia.", ref: "family" },
   { text: "Te sorprende con un detalle de 20eb (Cotidiano). El DJ elige." },
-  { text: "Se queda callada todo el rato y te escucha hablar." },
+  { text: "Se queda en silencio todo el rato y te escucha hablar." },
 ];
 
 const GOOD_END = [
   { text: "Se sincera y te cuenta el objetivo de su vida.", ref: "lifeGoals" },
   { text: "Te da un consejo útil. El DJ elige cuál." },
   { text: "Te enteras de sus valores y visión de la vida.", ref: "motivations" },
-  { text: "Está muy metida en ti y quiere otra cita.", flag: "skip-postdate", postDate: "wants-more" },
+  { text: "Tiene mucho interés en ti y quiere otra cita.", flag: "skip-postdate", postDate: "wants-more" },
   { text: "Descubres uno de sus grandes talentos (DJ elige). Tiene Base 16 en la habilidad correspondiente." },
   { text: "La cita termina demasiado pronto para aprender nada más." },
 ];
@@ -366,14 +405,14 @@ const WEIRD_BEGINNING = [
 const WEIRD_MIDDLE = [
   { text: "Se disculpa para ir al baño y no vuelve nunca.", flag: "abort" },
   { text: "Empieza una pelea y la termina rápido. Tiene Base 16 en una habilidad de combate (DJ elige)." },
-  { text: "No te enteras de nada porque pasó todo el rato pegado a su Agent." },
+  { text: "No te enteras de nada porque pasó todo el rato pendiente de su Agent." },
   { text: "Le gusta mucho el Smash. Puede que también el Synthcoke, no lo sabes seguro." },
   { text: "Te cuenta a sus tres enemigos más odiados.", ref: "enemies", refCount: 3 },
   { text: "Habla de su familia todo el rato. Te enteras de mucho.", ref: "familyDouble" },
 ];
 
 const WEIRD_END = [
-  { text: "Está muy metida en ti y quiere otra cita.", flag: "skip-postdate", postDate: "wants-more" },
+  { text: "Tiene mucho interés en ti y quiere otra cita.", flag: "skip-postdate", postDate: "wants-more" },
   { text: "Te enteras de sus valores y visión de la vida.", ref: "motivations" },
   { text: "Insiste en enseñarte su «amuleto de la suerte».", ref: "valuedPossession" },
   { text: "Te da un consejo útil. El DJ elige cuál." },
@@ -390,7 +429,7 @@ const GOOD_WEIRD_QUIRKS = [
   "La ropa de tu cita estaba muy manchada y no le importaba.",
   "El Agent de tu cita sonó varias veces durante la cita.",
   "Tu cita no dejó propina.",
-  "Tu cita mintió sobre un dato que aprendiste de ella (a tu elección cuál).",
+  "Tu cita mintió sobre un dato que habías aprendido (a tu elección cuál).",
   "Tu cita apareció con media hora de retraso.",
   "Al principio de la cita, pensó que eras otra persona.",
   "Tu cita se estaba recuperando de una herida de bala.",

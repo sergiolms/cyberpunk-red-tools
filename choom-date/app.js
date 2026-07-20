@@ -48,6 +48,7 @@
       id: uid(),
       firstName,
       initial: firstName[0].toUpperCase(),
+      gender: pick(GENDERS),
       keywords,
       role,
       accent,
@@ -55,8 +56,29 @@
     };
   };
 
-  const generateDeck = (n = DECK_SIZE) =>
-    Array.from({ length: n }, () => generateMatch());
+  const generateDeck = (n = DECK_SIZE) => {
+    // Evita nombres repetidos dentro de la misma baraja.
+    const deck = [];
+    const usedNames = new Set();
+    let guard = 0;
+    while (deck.length < n && guard < n * 20) {
+      guard++;
+      const m = generateMatch();
+      if (usedNames.has(m.firstName)) continue;
+      usedNames.add(m.firstName);
+      deck.push(m);
+    }
+    return deck;
+  };
+
+  // Adapta una palabra (keyword/rol) al género del match.
+  // f = femenino, m = masculino, e = no binario (forma inclusiva -e).
+  const GENDER_KEY = { "Femenino": "f", "Masculino": "m", "No binario": "e" };
+  const genderWord = (word, genderLabel) => {
+    const forms = WORD_FORMS[word];
+    if (!forms) return word;
+    return forms[GENDER_KEY[genderLabel]] || word;
+  };
 
   // ============================================================
   // DATEPATH RESOLVER
@@ -65,22 +87,27 @@
   // ============================================================
 
   // Resolvers de subtablas del manual. Cada resolver hace su propia tirada.
-  const resolveRef = (refId, refCount = 1) => {
+  // `roleName` es el rol del match (si lo tiene) y `gender` su etiqueta,
+  // para mantener coherencia narrativa y de género.
+  const resolveRef = (refId, refCount = 1, roleName = null, gender = null, avoidKeywords = []) => {
     switch (refId) {
       case "keyword": {
-        // Datepath pág. 12: "Tira en Keywords hasta obtener una NUEVA para tu cita"
-        // Aquí simplemente devolvemos una keyword nueva.
-        const newKw = pick(KEYWORDS);
-        return { source: "Keywords · Datepath p.3", entries: [newKw] };
+        // Datepath pág. 12: "Tira en Keywords hasta obtener una NUEVA para tu cita".
+        // Excluimos las que el match ya muestra para que sea realmente nueva.
+        let newKw = pick(KEYWORDS);
+        let guard = 0;
+        while (avoidKeywords.includes(newKw) && guard < 40) { newKw = pick(KEYWORDS); guard++; }
+        return { source: "Keywords · Datepath p.3", entries: [genderWord(newKw, gender)] };
       }
 
       case "roleLifepath": {
         // "Usa la Vía de la Vida basada en rol (CP:R p.53)"
-        // No tenemos las tablas aquí; devolvemos el rol como referencia.
-        const roles = Object.keys(ROLE_META);
+        // Usamos el rol del propio match para no contradecir su ficha;
+        // solo tiramos al azar si el match no tiene rol asignado.
+        const role = genderWord(roleName || pick(Object.keys(ROLE_META)), gender);
         return {
           source: "Vía de la Vida basada en rol · CP:R p.53",
-          entries: [`Rol: ${pick(roles)} — el DJ desarrolla esta parte.`],
+          entries: [`Rol: ${role} — el DJ desarrolla esta parte.`],
           verbatim: true,
         };
       }
@@ -122,12 +149,12 @@
     }
   };
 
-  const resolveBeat = (beat) => {
+  const resolveBeat = (beat, roleName = null, gender = null, avoidKeywords = []) => {
     const out = { text: beat.text };
     if (beat.flag) out.flag = beat.flag;
     if (beat.postDate) out.postDate = beat.postDate;
     if (beat.ref) {
-      const resolved = resolveRef(beat.ref, beat.refCount || 1);
+      const resolved = resolveRef(beat.ref, beat.refCount || 1, roleName, gender, avoidKeywords);
       if (resolved) out.detail = resolved;
     }
     return out;
@@ -177,18 +204,23 @@
       ? { beg: GOOD_BEGINNING, mid: GOOD_MIDDLE, end: GOOD_END }
       : { beg: WEIRD_BEGINNING, mid: WEIRD_MIDDLE, end: WEIRD_END };
 
-    report.beginning = resolveBeat(pick(beatsTable.beg));
+    // Rol y género del match para adaptar los textos de los beats.
+    const roleName = match.role ? match.role.name : null;
+    const genderLabel = match.gender ? match.gender.label : null;
+    const ownKeywords = match.keywords || [];
+
+    report.beginning = resolveBeat(pick(beatsTable.beg), roleName, genderLabel, ownKeywords);
 
     // Un "Weird Middle 1" corta la cita: la persona se va al baño y no vuelve.
     const middleBeat = pick(beatsTable.mid);
-    report.middle = resolveBeat(middleBeat);
+    report.middle = resolveBeat(middleBeat, roleName, genderLabel, ownKeywords);
     if (report.middle.flag === "abort") {
       report.aborted = true;
       return report;
     }
 
     const endBeat = pick(beatsTable.end);
-    report.end = resolveBeat(endBeat);
+    report.end = resolveBeat(endBeat, roleName, genderLabel, ownKeywords);
 
     // Extra para cita BUENA: One... Weird... Thing
     if (vibe === "good") {
@@ -334,12 +366,29 @@
     controlBtns:    null, // populated post-render
   };
 
-  // El botón Guardar solo está disponible para informes recién tirados,
-  // no cuando se está releyendo uno ya guardado desde la agenda.
-  const setCanSaveCurrent = (canSave) => {
-    if (!dom.saveBtn) return;
-    dom.saveBtn.disabled = !canSave;
-    dom.saveBtn.textContent = canSave ? "Guardar en agenda" : "Ya en tu agenda";
+  // Configura los dos botones del footer del informe según el contexto:
+  // informe recién tirado (descartar / guardar) vs. abierto desde la agenda
+  // (quitar de la agenda / pedir otra cita).
+  const setReportActions = (isSaved) => {
+    if (!dom.saveBtn || !dom.dismissBtn) return;
+    if (isSaved) {
+      dom.dismissBtn.textContent = "Quitar de la agenda";
+      dom.dismissBtn.dataset.action = "remove-contact";
+      dom.dismissBtn.title = "Eliminar este contacto de la agenda";
+      dom.dismissBtn.classList.remove("primary");
+      dom.saveBtn.textContent = "Pedir otra cita";
+      dom.saveBtn.dataset.action = "new-date";
+      dom.saveBtn.title = "Lanzar una nueva cita con este contacto";
+      dom.saveBtn.classList.add("primary");
+    } else {
+      dom.dismissBtn.textContent = "✕ Descartar";
+      dom.dismissBtn.dataset.action = "close-match";
+      dom.dismissBtn.title = "Salir sin guardar";
+      dom.saveBtn.textContent = "Guardar en agenda";
+      dom.saveBtn.dataset.action = "save-match";
+      dom.saveBtn.title = "";
+      // El énfasis primary entre guardar/descartar lo fija applyVibeChrome.
+    }
   };
 
   // Cabecera + énfasis del footer según el desenlace de la cita.
@@ -388,7 +437,6 @@
       `linear-gradient(180deg, rgba(9, 11, 15, 0) 55%, rgba(9, 11, 15, 0.92) 100%), ${match.cardBg}`;
 
     const fileNo = String(rand(100, 999)) + "-" + String(rand(1000, 9999));
-    const roleGlyph = match.role ? match.role.glyph : "♡";
 
     card.innerHTML = `
       <div class="card-header">
@@ -398,8 +446,6 @@
 
       <div class="card-avatar" aria-hidden="true">
         <span class="monogram">${esc(match.initial)}</span>
-        <span class="role-badge">Nuevo Match</span>
-        <span class="role-glyph">${roleGlyph}</span>
       </div>
 
       <div class="card-stamp like">MATCH</div>
@@ -407,10 +453,11 @@
 
       <div class="card-body">
         <h2 class="card-name">${esc(match.firstName)}</h2>
+        <span class="card-gender">${match.gender.glyph} ${esc(match.gender.label)}</span>
         <p class="card-tagline">Descripción con dos palabras clave:</p>
         <div class="card-keywords">
           ${match.keywords.map((kw) => `
-            <span class="card-keyword${ROLE_META[kw] ? " is-role" : ""}">${esc(kw)}</span>
+            <span class="card-keyword${ROLE_META[kw] ? " is-role" : ""}">${esc(genderWord(kw, match.gender.label))}</span>
           `).join("")}
         </div>
         <p class="card-footer-note">
@@ -547,7 +594,7 @@
   const renderRoleBadge = (match) => {
     if (!match.role) return "";
     return `<span class="role-chip" style="border-color:${match.role.accent};color:${match.role.accent}">
-      ${match.role.glyph} ${esc(match.role.name)}
+      ${match.role.glyph} ${esc(genderWord(match.role.name, match.gender.label))}
     </span>`;
   };
 
@@ -613,7 +660,7 @@
           <div class="report-match-info">
             <h2 class="report-match-name">${esc(r.match.firstName)}</h2>
             <div class="report-match-keywords">
-              ${r.match.keywords.map((kw) => `<span class="report-kw">${esc(kw)}</span>`).join("")}
+              ${r.match.keywords.map((kw) => `<span class="report-kw">${esc(genderWord(kw, r.match.gender.label))}</span>`).join("")}
               ${renderRoleBadge(r.match)}
             </div>
           </div>
@@ -731,22 +778,7 @@
     // Estado del footer: los contactos guardados no se pueden re-guardar,
     // y el bot\u00f3n de re-tirar cambia su significado a \u00abnueva cita\u00bb.
     const isSaved = state.contactContext !== null;
-    setCanSaveCurrent(!isSaved);
-    setRerollMode(isSaved ? "new-date" : "reroll");
-  };
-
-  const setRerollMode = (mode) => {
-    const btn = document.querySelector(".reroll-btn");
-    if (!btn) return;
-    if (mode === "new-date") {
-      btn.title = "Lanzar nueva cita (influida por la anterior)";
-      btn.setAttribute("aria-label", "Lanzar nueva cita con este contacto");
-      btn.dataset.mode = "new-date";
-    } else {
-      btn.title = "Volver a tirar";
-      btn.setAttribute("aria-label", "Volver a tirar el Datepath");
-      btn.dataset.mode = "reroll";
-    }
+    setReportActions(isSaved);
   };
 
   // ============================================================
@@ -788,18 +820,6 @@
     closeMatch();
   };
 
-  const rerollMatch = () => {
-    if (!state.currentEntry) return;
-    const report = rollDatepath(state.currentEntry.match);
-    state.currentEntry = {
-      ...state.currentEntry,
-      id: uid(),
-      at: Date.now(),
-      report,
-    };
-    paintCurrentView();
-  };
-
   const addNewDate = () => {
     if (!state.contactContext) return;
     const contact = state.savedContacts.find((c) => c.id === state.contactContext.contactId);
@@ -825,9 +845,13 @@
     paintCurrentView();
   };
 
-  const rerollOrNewDate = () => {
-    if (state.contactContext) addNewDate();
-    else rerollMatch();
+  const removeCurrentContact = () => {
+    if (!state.contactContext) return;
+    const id = state.contactContext.contactId;
+    state.savedContacts = state.savedContacts.filter((c) => c.id !== id);
+    persistSaved();
+    closeMatch();
+    openMatches();
   };
 
   const showDateAt = (dateIndex) => {
@@ -929,10 +953,14 @@
   const openOverlay = (el) => {
     el.hidden = false;
     el.setAttribute("aria-hidden", "false");
+    document.body.classList.add("no-scroll");
   };
   const closeOverlay = (el) => {
     el.hidden = true;
     el.setAttribute("aria-hidden", "true");
+    const anyOpen = [dom.matchOverlay, dom.infoOverlay, dom.matchesOverlay]
+      .some((o) => o && !o.hidden);
+    if (!anyOpen) document.body.classList.remove("no-scroll");
   };
 
   // ============================================================
@@ -946,7 +974,8 @@
     "reshuffle":      () => { state.deck = generateDeck(); renderDeck(); },
     "close-match":    closeMatch,
     "save-match":     saveMatch,
-    "reroll-match":   rerollOrNewDate,
+    "new-date":       addNewDate,
+    "remove-contact": removeCurrentContact,
     "prev-date":      goPrevDate,
     "next-date":      goNextDate,
     "toggle-matches": openMatches,
