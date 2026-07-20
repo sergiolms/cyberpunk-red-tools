@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../shared/ui.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -32,12 +33,18 @@
         </a>
         <div class="topbar-actions">
           <span class="counter" id="sessionCounter" aria-live="polite">0 citas</span>
-          <button class="command-button" type="button" data-action="reshuffle" title="Regenerar baraja">
-            Rebarajar
-          </button>
-          <button class="command-button" type="button" data-action="toggle-matches" title="Ver tu agenda de citas">
-            Agenda
-          </button>
+          <div class="split-button">
+            <button class="command-button primary split-main" type="button" data-action="reshuffle" title="Regenerar baraja">
+              Rebarajar
+            </button>
+            <button class="command-button primary split-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
+              <span aria-hidden="true">▾</span>
+            </button>
+            <div class="split-menu" role="menu" hidden>
+              <button class="split-item" type="button" role="menuitem" data-action="toggle-matches">Agenda</button>
+              <button class="split-item" type="button" role="menuitem" data-action="help">¿Cómo funciona?</button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -190,6 +197,7 @@
       </aside>
     </div>
 
+    <script src="../shared/ui.js"></script>
     <script src="./data.js"></script>
     <script src="./app.js"></script>
   </body>

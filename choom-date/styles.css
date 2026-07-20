@@ -19,6 +19,9 @@
   --font-ui: "Rajdhani", system-ui, sans-serif;
   --font-display: "Oswald", "Arial Narrow", sans-serif;
   --font-mono: "Share Tech Mono", ui-monospace, monospace;
+  /* Match the shared split-button/combobox chrome to the pink theme. */
+  --ss-accent: var(--pink);
+  --ss-danger: var(--danger);
 }
 
 * {
@@ -278,24 +281,28 @@ textarea {
   cursor: grabbing;
 }
 
-/* Depth stacking */
+/* Depth stacking — la carta frontal (depth 0) va SIEMPRE encima. */
+.profile-card[data-depth="0"] {
+  z-index: 4;
+}
+
 .profile-card[data-depth="1"] {
   transform: translateY(10px) scale(0.96);
   filter: brightness(0.85);
-  z-index: 2;
+  z-index: 3;
 }
 
 .profile-card[data-depth="2"] {
   transform: translateY(20px) scale(0.92);
   filter: brightness(0.65);
-  z-index: 1;
+  z-index: 2;
 }
 
 .profile-card[data-depth="3"] {
   transform: translateY(30px) scale(0.88);
   filter: brightness(0.45);
   opacity: 0.35;
-  z-index: 0;
+  z-index: 1;
 }
 
 /* Corner brackets */
@@ -646,6 +653,7 @@ textarea {
   position: relative;
   width: min(100%, 460px);
   max-height: min(92vh, 720px);
+  max-height: min(92dvh, 720px);
   border: 1px solid var(--border-strong);
   background: linear-gradient(135deg, rgba(255, 46, 136, 0.08), transparent 45%), var(--bg-panel);
   display: flex;
@@ -666,6 +674,7 @@ textarea {
 .report-modal {
   width: min(100%, 560px);
   max-height: min(94vh, 820px);
+  max-height: min(94dvh, 820px);
   border-color: var(--pink);
   box-shadow: 0 0 0 1px var(--pink), 0 30px 80px rgba(255, 46, 136, 0.3);
 }
@@ -1019,6 +1028,7 @@ textarea {
 .info-modal {
   width: min(100%, 520px);
   max-height: min(90vh, 640px);
+  max-height: min(90dvh, 640px);
 }
 
 .details-head {
@@ -1385,5 +1395,44 @@ button.match-row:hover .row-chevron {
   .deck-btn-info {
     width: 44px;
     height: 44px;
+  }
+
+  /* Los modales pasan a ocupar toda la pantalla del dispositivo. */
+  .modal-overlay,
+  .matches-overlay {
+    padding: 0;
+    place-items: stretch;
+  }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    /* Sin esquinas cortadas en móvil: recortarían el contenido. */
+    clip-path: none;
+  }
+  .report-body,
+  .info-body {
+    /* Deja hueco para el teclado / barra del navegador. */
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  /* La botonera del informe se apila y ocupa todo el ancho. */
+  .report-actions {
+    padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .report-actions-primary {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+  .report-actions-primary .command-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .matches-drawer {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
   }
 }

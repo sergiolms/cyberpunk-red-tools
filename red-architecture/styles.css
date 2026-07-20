@@ -637,6 +637,27 @@ select {
   }
 }
 
+/* En móvil el nav ocupa todo el ancho del dispositivo y el scroll
+   horizontal vive dentro de las tabs, no en el nav. */
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 0;
+  }
+  .brand-lockup {
+    padding: 0 18px;
+  }
+  .tabs {
+    width: 100%;
+    min-width: 0;
+    padding: 0 18px 2px;
+    scroll-padding-inline: 18px;
+  }
+}
+
 /* ============= RED architecture ============= */
 .floor-stack {
   display: flex;
