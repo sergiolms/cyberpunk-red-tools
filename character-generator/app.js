@@ -519,7 +519,9 @@
     state.armor = [];
     state.gear = [];
     g.weapons.forEach((w) => {
-      if (/blindaje|escudo|cp\d|kevlar|flak|metalgear|cuero/i.test(w) && /cp|blindaje|escudo/i.test(w)) {
+      // Solo el blindaje que se lleva puesto va a la lista de armadura; los
+      // escudos aparecen como opción dentro del hueco de armas y se quedan ahí.
+      if (/blindaje|kevlar|metalgear/i.test(w)) {
         state.armor.push({ name: w });
       } else {
         state.weapons.push({ name: w });

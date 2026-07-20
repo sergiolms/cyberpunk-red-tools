@@ -233,8 +233,9 @@
 
   /**
    * Rolls a critical injury on the given table (body/head). Per RED, rerolls
-   * until an injury the enemy is not already suffering is found, applies the
-   * +5 bonus damage directly to HP and records the injury as a reminder.
+   * until an injury the enemy is not already suffering is found and records it
+   * as a reminder. Does NOT subtract HP — the GM applies weapon/bonus damage
+   * separately with the HP buttons.
    */
   const rollCriticalInjury = (enemy, location) => {
     if (enemy.currentHp <= 0) return;
@@ -258,11 +259,17 @@
       guard++;
     }
 
-    addCriticalInjury(enemy, location, roll, true);
+    // La herida crítica solo se registra como recordatorio: NO resta PD.
+    // El DJ aplica el daño del arma por separado.
+    const ok = addCriticalInjury(enemy, location, roll, false);
+    if (!ok) {
+      toast(`${enemy.name}: no se pudo añadir la herida (ya la sufre).`, "error");
+      return;
+    }
     persistEnemies();
     render();
     const loc = location === "head" ? "Cabeza" : "Cuerpo";
-    toast(`${enemy.name}: ${loc} ${roll} → ${CRITICAL_INJURIES[location][roll].name} (−${CRIT_BONUS_DAMAGE} PD)`, "success");
+    toast(`${enemy.name}: herida crítica ${loc} ${roll} → ${CRITICAL_INJURIES[location][roll].name}`, "success");
   };
 
   /** Manually assigns a specific critical injury (DJ override, no auto damage). */
@@ -534,9 +541,9 @@
 
   const CRIT_HELP =
     "Herida crítica: cuando 2+ dados de daño sacan un 6. Tira 2d6 en la tabla de la zona impactada " +
-    "(cabeza solo con tiro de precisión). Inflige +5 PD directos (no daña armadura) y aplica la desventaja. " +
-    "Si repites herida, vuelve a tirar. Tirar resta los 5 PD automáticamente; añadir una lesión manual solo " +
-    "la registra como recordatorio (sin daño).";
+    "(cabeza solo con tiro de precisión). Según el manual inflige +5 PD directos (no daña armadura) y aplica la desventaja. " +
+    "Si repites herida, vuelve a tirar. Aquí la tirada solo registra la herida como recordatorio: aplica tú el daño del " +
+    "arma y los +5 PD con los botones de PD si procede.";
 
   const renderCritSection = (enemy) => {
     const injuries = Array.isArray(enemy.criticalInjuries) ? enemy.criticalInjuries : [];

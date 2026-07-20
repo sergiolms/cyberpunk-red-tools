@@ -60,17 +60,34 @@
             </div>
           </div>
           <div class="controls">
-            <label class="field field-narrow">
-              <span class="field-label">Nº de pisos (3-18)</span>
-              <input id="raPisos" class="select" type="number" min="3" max="18" value="6" />
-            </label>
             <label class="field">
-              <span class="field-label">Intensidad</span>
-              <select id="raIntensidad" class="select">
-                <option value="baja">Baja (poco hielo negro)</option>
-                <option value="media" selected>Media</option>
-                <option value="alta">Alta (fortaleza corpo)</option>
+              <span class="field-label">Grado de dificultad</span>
+              <select id="raDificultad" class="select">
+                <option value="basica">Básica (VD6 · Interface 2)</option>
+                <option value="estandar" selected>Estándar (VD8 · Interface 4)</option>
+                <option value="pococomun">Poco común (VD10 · Interface 6)</option>
+                <option value="avanzada">Avanzada (VD12 · Interface 8)</option>
               </select>
+            </label>
+            <label class="field field-narrow">
+              <span class="field-label">Nº de pisos</span>
+              <input id="raPisos" class="select" type="number" min="3" max="30" value="6" disabled />
+            </label>
+            <label class="check">
+              <input type="checkbox" id="raAutoPisos" checked />
+              <span>Tirar 3d6 (automático)</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="raRamas" />
+              <span>Permitir ramas (1d10 ≥ 7)</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="raRerollDup" checked />
+              <span>Repetir programas/contraseñas duplicados</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="raConDemonioArq" checked />
+              <span>Añadir Demonio si hay nodos</span>
             </label>
             <button class="btn-primary" type="button" data-action="gen-arq">Generar arquitectura</button>
           </div>

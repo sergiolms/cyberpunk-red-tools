@@ -44,120 +44,132 @@
     });
   });
 
-  const tierFor = (n) => RA_TIERS.find((t) => n >= t.min && n <= t.max) || RA_TIERS[RA_TIERS.length - 1];
-
   // ============================================================
-  // ARQUITECTURA
+  // ARQUITECTURA (método oficial · manual pág. 209-211)
   // ============================================================
-  function genArquitectura() {
-    const n = Math.max(3, Math.min(18, parseInt(document.getElementById("raPisos").value, 10) || 6));
-    const intensidad = document.getElementById("raIntensidad").value;
-    const tier = tierFor(n);
+  const iceByName = (nm) => RA_BLACK_ICE.find((x) => x.name === nm);
+  const parseCost = (s) => Number(String(s).replace(/[^\d]/g, "")) || 0;
 
-    // Cuánto hielo negro y cuántos nodos según intensidad.
-    const iceFactor = intensidad === "alta" ? 0.9 : intensidad === "baja" ? 0.34 : 0.6;
-    const numIce = Math.max(1, Math.round(n * iceFactor));
-    const maxNodes = tier.nodes === Infinity ? Math.max(2, Math.round(n / 3)) : tier.nodes;
-    const numNodes = intensidad === "baja" ? Math.max(1, Math.round(maxNodes / 2)) : maxNodes;
-    const numDemons = Math.floor(n / RA_RULES.demonPerFloors);
-    const numPasswords = Math.max(1, Math.round(n / 4));
-    const numFiles = Math.max(1, Math.round(n / 6) + 1);
-
-    // Pisos vacíos que iremos rellenando (índice 1..n; el 1 es la entrada).
-    const floors = Array.from({ length: n }, () => []);
-    const freeDeep = () => {
-      // prioriza pisos profundos (mayor número) que aún no tengan nodo/archivo
-      for (let i = n - 1; i >= 0; i--) if (!floors[i].some((x) => x.kind === "node" || x.kind === "file")) return i;
-      return n - 1;
-    };
-    const anyFree = () => Math.floor(Math.random() * n);
-
-    // Archivos (el botín), en los pisos más profundos.
-    for (let i = 0; i < numFiles; i++) {
-      floors[Math.max(0, n - 1 - i)].push({ kind: "file", text: pick(RA_FILES) });
-    }
-    // Nodos de control con una defensa y VD de Control.
-    const usedDef = [];
-    for (let i = 0; i < numNodes; i++) {
-      const def = sample(RA_DEFENSAS.filter((x) => !usedDef.includes(x.name)), 1)[0] || pick(RA_DEFENSAS);
-      usedDef.push(def.name);
-      const vd = pick(RA_PASSWORD_VD).vd;
-      floors[freeDeep()].push({ kind: "node", def, vd });
-    }
-    // Contraseñas (puertas que bloquean el descenso), repartidas.
-    for (let i = 0; i < numPasswords; i++) {
-      const pw = pick(RA_PASSWORD_VD);
-      floors[Math.min(n - 1, Math.round(((i + 1) * n) / (numPasswords + 1)))].push({ kind: "pass", vd: pw.vd });
-    }
-    // Hielo negro al acecho (puede haber 2-3 por piso).
-    const iceChosen = sample(RA_BLACK_ICE, numIce, false);
-    iceChosen.forEach((ice) => {
-      let tries = 0;
-      let idx = anyFree();
-      while (floors[idx].filter((x) => x.kind === "ice").length >= 3 && tries < 10) {
-        idx = anyFree();
-        tries++;
+  // Tira un piso: Vestíbulo (1d6) para los dos primeros pisos del tronco,
+  // resto de pisos (3d6) para el resto. Vuelve a tirar programas/contraseñas
+  // ya salidos si `reroll` está activo (regla del manual).
+  function rollFloorEntry(diff, isLobby, seen, reroll) {
+    let guard = 0;
+    while (guard++ < 80) {
+      let entry;
+      if (isLobby) {
+        const v = RA_VESTIBULO[d(6) - 1];
+        entry = v.kind === "ice" ? { kind: "ice", ice: v.ice.slice() } : { kind: v.kind, vd: v.vd };
+      } else {
+        const cell = RA_PISOS[d(6) + d(6) + d(6)];
+        if (cell === "pass" || cell === "file" || cell === "node") entry = { kind: cell, vd: diff.vd };
+        else entry = { kind: "ice", ice: cell[diff.key].slice() };
       }
-      floors[idx].push({ kind: "ice", ice });
+      const sig =
+        entry.kind === "ice" ? "ice:" + entry.ice.slice().sort().join("|") :
+        entry.kind === "pass" ? "pass:" + entry.vd : null;
+      if (reroll && sig && seen.has(sig)) continue;
+      if (sig) seen.add(sig);
+      return entry;
+    }
+    return { kind: "file", vd: diff.vd };
+  }
+
+  // Paso 1 · forma: reparte el total de pisos entre el tronco y las ramas
+  // (1d10 ≥ 7 → rama). El tronco siempre es el más largo (el «fondo»).
+  function buildBranches(total, allow) {
+    if (!allow || total < 6) return { mainLen: total, branches: [] };
+    let count = 0;
+    while (d(10) >= 7 && count < 2) count++;
+    if (!count) return { mainLen: total, branches: [] };
+    let per = Math.max(2, Math.round((total - 2) / (count + 2)));
+    let branches = Array.from({ length: count }, () => per);
+    let main = total - per * count;
+    while (main < per + 2 && per > 1) {
+      per--;
+      branches = branches.map(() => per);
+      main = total - per * count;
+    }
+    if (main < 3) return { mainLen: total, branches: [] };
+    return { mainLen: main, branches };
+  }
+
+  const RA_ICON = { file: "🗂️", node: "🎛️", pass: "🔒", ice: "🧊" };
+  function floorRowHtml(entry, label) {
+    let body;
+    if (entry.kind === "file") body = `${RA_ICON.file} <strong>Archivo</strong> <span class="muted-note">(el botín · VD${entry.vd})</span>`;
+    else if (entry.kind === "pass") body = `${RA_ICON.pass} <strong>Contraseña</strong> <span class="muted-note">(Puerta trasera VD${entry.vd})</span>`;
+    else if (entry.kind === "node") body = `${RA_ICON.node} <strong>Nodo de control</strong> → ${esc(entry.def.name)} <span class="muted-note">(Control VD${entry.vd} · contrarrestar Electrónica/Seguridad VD${entry.def.vd})</span>`;
+    else body = entry.ice.map((nm) => { const ic = iceByName(nm); return `${RA_ICON.ice} <strong>${esc(nm)}</strong> <span class="muted-note">${esc(ic.clase)} · PER ${ic.per} VEL ${ic.vel} ATQ ${ic.atq} DEF ${ic.def} REZ ${ic.rez}</span>`; }).join("<br>");
+    return `<div class="floor-row"><div class="floor-num">${esc(String(label))}</div><div class="floor-body">${body}</div></div>`;
+  }
+
+  function genArquitectura() {
+    const diff = RA_DIFICULTAD[document.getElementById("raDificultad").value] || RA_DIFICULTAD.estandar;
+    const auto = document.getElementById("raAutoPisos").checked;
+    const total = auto
+      ? d(6) + d(6) + d(6)
+      : Math.max(3, Math.min(30, parseInt(document.getElementById("raPisos").value, 10) || 6));
+    const allowBranches = document.getElementById("raRamas").checked;
+    const reroll = document.getElementById("raRerollDup").checked;
+    const wantDemon = document.getElementById("raConDemonioArq").checked;
+
+    const seen = new Set();
+    const { mainLen, branches } = buildBranches(total, allowBranches);
+
+    const mainFloors = Array.from({ length: mainLen }, (_, i) => rollFloorEntry(diff, i < 2, seen, reroll));
+    const branchFloors = branches.map((len) =>
+      Array.from({ length: len }, () => rollFloorEntry(diff, false, seen, reroll))
+    );
+    const all = [...mainFloors, ...branchFloors.flat()];
+
+    // A cada nodo de control se le asigna un dispositivo (cámaras, puerta, torreta…).
+    all.filter((e) => e.kind === "node").forEach((e) => { e.def = pick(RA_DEFENSAS); });
+
+    const counts = {
+      ice: all.filter((e) => e.kind === "ice").reduce((a, e) => a + e.ice.length, 0),
+      node: all.filter((e) => e.kind === "node").length,
+      pass: all.filter((e) => e.kind === "pass").length,
+      file: all.filter((e) => e.kind === "file").length,
+    };
+
+    const demon = counts.node > 0 && wantDemon ? (RA_DEMONS.find((x) => x.name === diff.demon) || RA_DEMONS[0]) : null;
+    const iceUsed = [...new Set(all.filter((e) => e.kind === "ice").flatMap((e) => e.ice))].map(iceByName).filter(Boolean);
+    const defsUsed = [...new Set(all.filter((e) => e.kind === "node").map((e) => e.def.name))]
+      .map((nm) => RA_DEFENSAS.find((x) => x.name === nm))
+      .filter(Boolean);
+
+    // Coste orientativo (el manual dobla el coste de los programas del 1.er piso).
+    let cost = 0;
+    all.forEach((e) => {
+      if (e.kind === "ice") e.ice.forEach((nm) => { const ic = iceByName(nm); if (ic) cost += parseCost(ic.cost); });
+      else if (e.kind === "pass") { const p = RA_PASSWORD_VD.find((x) => x.vd === e.vd); if (p) cost += parseCost(p.cost); }
     });
+    if (demon) cost += parseCost(demon.cost);
 
-    // Coste base de la arquitectura.
-    const baseCost = n * tier.cost;
-
-    const iconFor = { file: "🗂️", node: "🎛️", pass: "🔒", ice: "🧊" };
-    const rows = floors
-      .map((items, i) => {
-        const piso = i + 1;
-        const cells = items.length
-          ? items
-              .map((it) => {
-                if (it.kind === "file") return `${iconFor.file} <strong>Archivo</strong> · ${esc(it.text)}`;
-                if (it.kind === "node")
-                  return `${iconFor.node} <strong>Nodo de control</strong> → ${esc(it.def.name)} <span class="muted-note">(Control VD${it.vd} · contrarrestar Electrónica/Seguridad VD${it.def.vd})</span>`;
-                if (it.kind === "pass") return `${iconFor.pass} <strong>Contraseña</strong> <span class="muted-note">(Puerta trasera VD${it.vd})</span>`;
-                if (it.kind === "ice")
-                  return `${iconFor.ice} <strong>${esc(it.ice.name)}</strong> <span class="muted-note">${esc(it.ice.clase)} · PER ${it.ice.per} VEL ${it.ice.vel} ATQ ${it.ice.atq} DEF ${it.ice.def} REZ ${it.ice.rez}</span>`;
-                return "";
-              })
-              .join("<br>")
-          : `<span class="muted-note">Piso despejado</span>`;
-        return `<div class="floor-row"><div class="floor-num">${piso}</div><div class="floor-body">${cells}</div></div>`;
-      })
+    const branchesHtml = branchFloors
+      .map((arr, bi) => `
+        <div class="card-section">Rama ${bi + 1} <span class="muted-note">(se bifurca tras el piso 2)</span></div>
+        <div class="floor-stack">${arr.map((e, i) => floorRowHtml(e, `${bi + 1}·${i + 1}`)).join("")}</div>`)
       .join("");
-
-    // Demonios concretos según intensidad (para dirigir).
-    const demonPool =
-      intensidad === "alta"
-        ? [RA_DEMONS[1], RA_DEMONS[2]]
-        : intensidad === "baja"
-          ? [RA_DEMONS[0]]
-          : [RA_DEMONS[0], RA_DEMONS[0], RA_DEMONS[1]];
-    const demonsChosen = Array.from({ length: numDemons }, () => pick(demonPool));
-    const iceUsed = [...new Set(iceChosen.map((x) => x.name))].map((nm) => RA_BLACK_ICE.find((x) => x.name === nm));
-    const defsUsed = usedDef.map((nm) => RA_DEFENSAS.find((x) => x.name === nm)).filter(Boolean);
-
-    const demonSummary = numDemons
-      ? `👹 ${numDemons} Demonio${numDemons > 1 ? "s" : ""} (${[...new Set(demonsChosen.map((x) => x.name))].join(", ")}) manejando los nodos de control.`
-      : "Sin Demonio: las defensas se activan de forma automática (o las controla el DJ).";
-
-    const djBlock = `
-        <div class="card-section">Para dirigir · fichas listas</div>
-        ${demonsChosen.length ? demonsChosen.map(demonBlock).join("") : `<p class="muted-note">Sin Demonio en esta arquitectura.</p>`}
-        ${iceUsed.length ? `<p class="muted-note" style="margin-top:6px">Hielo negro presente en la arquitectura:</p>${iceTableHtml(iceUsed)}` : ""}
-        ${defsUsed.length ? `<p class="muted-note" style="margin-top:10px">Defensas conectadas a los nodos de control:</p><div class="dl">${defsUsed.map(defRow).join("")}</div>` : ""}`;
 
     document.getElementById("arqResult").innerHTML = `
       <article class="card" style="--card-accent:var(--cyan)">
-        <span class="card-tag">🗼 Arquitectura de ${n} pisos · ${intensidad}</span>
+        <span class="card-tag">🗼 Arquitectura ${esc(diff.label)} · ${total} pisos${branches.length ? ` · ${branches.length} rama${branches.length > 1 ? "s" : ""}` : ""}</span>
         <div class="dl" style="margin-bottom:14px">
-          <div class="dl-row"><div class="dl-key">Tramo</div><div class="dl-val">${n} pisos · máx. ${tier.nodes === Infinity ? "sin límite de" : tier.nodes} nodos de control · ${tier.portable ? "portátil" : "no portátil"}</div></div>
-          <div class="dl-row"><div class="dl-key">Coste base</div><div class="dl-val">${fmt(baseCost)} <span class="muted-note">(${fmt(tier.cost)}/piso; el hielo negro, defensas y demonios se pagan aparte)</span></div></div>
-          <div class="dl-row"><div class="dl-key">Contenido</div><div class="dl-val">${numIce} hielo negro · ${numNodes} nodos de control · ${numPasswords} contraseñas · ${numFiles} archivos · ${numDemons} demonios</div></div>
+          <div class="dl-row"><div class="dl-key">Dificultad</div><div class="dl-val">${esc(diff.label)} · contraseña/archivo/nodo = <strong>VD${diff.vd}</strong></div></div>
+          <div class="dl-row"><div class="dl-key">Netrunner objetivo</div><div class="dl-val">Interface <strong>${diff.ifBatalla}</strong> para plantar batalla${diff.ifMortal ? ` · <span class="muted-note">${esc(diff.ifMortal)} puede morir antes del fondo</span>` : ""}</div></div>
+          <div class="dl-row"><div class="dl-key">Contenido</div><div class="dl-val">${counts.ice} hielo negro · ${counts.node} nodo${counts.node !== 1 ? "s" : ""} de control · ${counts.pass} contraseña${counts.pass !== 1 ? "s" : ""} · ${counts.file} archivo${counts.file !== 1 ? "s" : ""}${demon ? " · 1 Demonio" : ""}</div></div>
+          <div class="dl-row"><div class="dl-key">Coste aprox.</div><div class="dl-val">${fmt(cost)} <span class="muted-note">(programas${demon ? " + demonio" : ""} + contraseñas; el manual dobla el coste de los programas del 1.er piso)</span></div></div>
         </div>
-        <p class="muted-note" style="margin-bottom:6px">${demonSummary}</p>
-        <div class="card-section">Pisos (de la entrada hacia el fondo)</div>
-        <div class="floor-stack">${rows}</div>
-        ${djBlock}
+        <p class="muted-note" style="margin-bottom:6px">${demon ? `👹 Demonio ${esc(demon.name)} manejando los nodos de control.` : counts.node ? "Los nodos de control se activan de forma automática (o los maneja el DJ)." : "Sin nodos de control activos en esta arquitectura."}</p>
+        <div class="card-section">Tronco principal (de la entrada hacia el fondo)</div>
+        <div class="floor-stack">${mainFloors.map((e, i) => floorRowHtml(e, i + 1)).join("")}</div>
+        ${branchesHtml}
+        <div class="card-section">Para dirigir · fichas listas</div>
+        ${demon ? demonBlock(demon) : `<p class="muted-note">Sin Demonio en esta arquitectura.</p>`}
+        ${iceUsed.length ? `<p class="muted-note" style="margin-top:6px">Hielo negro presente en la arquitectura:</p>${iceTableHtml(iceUsed)}` : ""}
+        ${defsUsed.length ? `<p class="muted-note" style="margin-top:10px">Dispositivos conectados a los nodos de control:</p><div class="dl">${defsUsed.map(defRow).join("")}</div>` : ""}
       </article>`;
   }
 
@@ -317,7 +329,14 @@
   });
 
   // ---------- init ----------
-  document.getElementById("arqResult").innerHTML = empty("Elige nº de pisos e intensidad y genera una arquitectura.");
+  const raAuto = document.getElementById("raAutoPisos");
+  const raPisos = document.getElementById("raPisos");
+  if (raAuto && raPisos) {
+    const syncPisos = () => { raPisos.disabled = raAuto.checked; };
+    raAuto.addEventListener("change", syncPisos);
+    syncPisos();
+  }
+  document.getElementById("arqResult").innerHTML = empty("Elige la dificultad y genera una arquitectura según el manual.");
   document.getElementById("combateResult").innerHTML = empty("Genera la oposición de un netrun.");
   tablaIce(); // referencia completa, sin botón
   verDemonios(); // referencia completa, sin botón

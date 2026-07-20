@@ -74,3 +74,48 @@ const RA_DEFENSAS = [
 const RA_RULES = {
   demonPerFloors: 6, // 1 Demonio por cada 6 pisos.
 };
+
+// ============================================================
+// MÉTODO OFICIAL DE GENERACIÓN (manual básico pág. 209-211)
+// ============================================================
+
+// Paso 0 — Grado de dificultad: fija el VD de contraseña/archivo/nodo
+// y el Interface del netrunner objetivo. `demon` = Demonio sugerido.
+const RA_DIFICULTAD = {
+  basica:    { key: "basica",    label: "Básica",     vd: 6,  ifBatalla: 2, ifMortal: null,               demon: "Duende" },
+  estandar:  { key: "estandar",  label: "Estándar",   vd: 8,  ifBatalla: 4, ifMortal: "Interface 2 o menos", demon: "Duende" },
+  pococomun: { key: "pococomun", label: "Poco común", vd: 10, ifBatalla: 6, ifMortal: "Interface 4 o menos", demon: "Afrit" },
+  avanzada:  { key: "avanzada",  label: "Avanzada",   vd: 12, ifBatalla: 8, ifMortal: "Interface 6 o menos", demon: "Balron" },
+};
+
+// Vestíbulo (los dos primeros pisos), tirada 1d6. VD fijos según la tabla.
+const RA_VESTIBULO = [
+  { kind: "file", vd: 6 },              // 1 · Archivo VD6
+  { kind: "pass", vd: 6 },              // 2 · Contraseña VD6
+  { kind: "pass", vd: 8 },              // 3 · Contraseña VD8
+  { kind: "ice",  ice: ["Mofeta"] },    // 4
+  { kind: "ice",  ice: ["Fuego fatuo"] }, // 5
+  { kind: "ice",  ice: ["Asesino"] },   // 6
+];
+
+// Resto de pisos, tirada 3d6 (índices 3-18). Cada celda es o bien una
+// lista de programas de hielo negro por dificultad, o una cadena
+// ("pass"/"file"/"node") cuyo VD toma el valor de la dificultad elegida.
+const RA_PISOS = {
+  3:  { basica: ["Perro del infierno"], estandar: ["Perro del infierno", "Perro del infierno"], pococomun: ["Kraken"], avanzada: ["Perro del infierno", "Perro del infierno", "Perro del infierno"] },
+  4:  { basica: ["Dientes de sable"], estandar: ["Perro del infierno", "Asesino"], pococomun: ["Perro del infierno", "Escorpión"], avanzada: ["Áspid", "Áspid"] },
+  5:  { basica: ["Cuervo", "Cuervo"], estandar: ["Mofeta", "Mofeta"], pococomun: ["Perro del infierno", "Asesino"], avanzada: ["Perro del infierno", "Liche"] },
+  6:  { basica: ["Perro del infierno"], estandar: ["Dientes de sable"], pococomun: ["Cuervo", "Cuervo"], avanzada: ["Fuego fatuo", "Fuego fatuo", "Fuego fatuo"] },
+  7:  { basica: ["Fuego fatuo"], estandar: ["Escorpión"], pococomun: ["Dientes de sable"], avanzada: ["Perro del infierno", "Dientes de sable"] },
+  8:  { basica: ["Cuervo"], estandar: ["Perro del infierno"], pococomun: ["Perro del infierno"], avanzada: ["Kraken"] },
+  9:  "pass",
+  10: "file",
+  11: "node",
+  12: "pass",
+  13: { basica: ["Mofeta"], estandar: ["Áspid"], pococomun: ["Asesino"], avanzada: ["Gigante"] },
+  14: { basica: ["Áspid"], estandar: ["Asesino"], pococomun: ["Liche"], avanzada: ["Dragón"] },
+  15: { basica: ["Escorpión"], estandar: ["Liche"], pococomun: ["Dragón"], avanzada: ["Asesino", "Escorpión"] },
+  16: { basica: ["Asesino", "Mofeta"], estandar: ["Áspid"], pococomun: ["Áspid", "Cuervo"], avanzada: ["Kraken"] },
+  17: { basica: ["Fuego fatuo", "Fuego fatuo", "Fuego fatuo"], estandar: ["Cuervo", "Cuervo", "Cuervo"], pococomun: ["Dragón", "Fuego fatuo"], avanzada: ["Cuervo", "Fuego fatuo", "Perro del infierno"] },
+  18: { basica: ["Liche"], estandar: ["Liche", "Cuervo"], pococomun: ["Gigante"], avanzada: ["Dragón", "Dragón"] },
+};
